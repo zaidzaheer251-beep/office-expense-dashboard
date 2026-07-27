@@ -1041,50 +1041,118 @@ body {
 @media (max-width: 768px) {
   .app-container {
     flex-direction: column;
-    overflow-y: auto;
+    height: 100vh;
+    overflow: hidden;
   }
+  
   .sidebar {
     width: 100%;
-    height: auto;
+    height: 60px;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
     border-right: none;
     border-bottom: 1px solid var(--border-color);
-    padding: 16px;
+    padding: 12px 20px;
   }
+  
+  .sidebar-header {
+    margin-bottom: 0 !important;
+  }
+  
   .sidebar-logo {
-    margin-bottom: 16px;
+    margin-bottom: 0 !important;
+    font-size: 18px !important;
   }
+  
+  .sidebar-logo .logo-dot {
+    width: 8px !important;
+    height: 8px !important;
+  }
+
   .sidebar-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--bg-sidebar);
+    display: flex;
     flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 8px;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    padding: 0 10px;
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    margin: 0 !important;
+    list-style: none;
   }
+  
+  .sidebar-menu .menu-item {
+    width: auto !important;
+    padding: 10px 15px !important;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    margin: 0 !important;
+  }
+  
   .menu-label {
     display: none;
   }
+  
   .sidebar-footer {
-    display: none;
+    display: flex !important;
+    padding-top: 0 !important;
+    border-top: none !important;
+    margin-top: 0 !important;
   }
+  
+  .sidebar-footer .user-profile {
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+  }
+  
+  .sidebar-footer .user-avatar {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .sidebar-footer .user-info {
+    display: none !important;
+  }
+  
   .main-layout-container {
-    height: auto;
-    overflow: visible;
+    height: calc(100vh - 120px) !important;
+    overflow-y: auto !important;
   }
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 16px;
-  }
-  .header-right {
-    width: 100%;
-    justify-content: space-between;
-  }
+  
   .main-content {
-    padding: 16px;
-    height: auto;
-    overflow: visible;
+    padding: 16px 16px 80px 16px !important;
+    height: auto !important;
+    overflow: visible !important;
   }
-  .chat-layout-wrapper {
-    height: 500px;
+  
+  .header {
+    display: none !important;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+  
+  .metric-card {
+    padding: 16px !important;
+  }
+  
+  .metric-value {
+    font-size: 18px !important;
+  }
+  
+  .dashboard-grid-bottom {
+    grid-template-columns: 1fr !important;
   }
 }
 

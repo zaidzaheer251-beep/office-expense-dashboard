@@ -62,6 +62,9 @@
   <!-- Supabase -->
   <script src="supabase.js"></script>
   
+  <!-- html2pdf -->
+  <script src="html2pdf.js"></script>
+  
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
@@ -623,6 +626,15 @@
 
       <!-- TAB 6: REPORTS VIEW -->
       <main class="main-content tab-view" id="reports-view">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h2 style="font-family: var(--font-secondary); font-size: 24px; font-weight: 700;">Financial Reports</h2>
+            <p style="font-size: 13px; color: var(--text-secondary);">Analyze and export your personal expense analytics</p>
+          </div>
+          <button id="download-pdf-btn" style="padding: 10px 18px; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; background: var(--primary-gradient); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; box-shadow: var(--shadow-md); transition: var(--transition);">
+            <i class="fa-solid fa-file-pdf"></i> Download PDF Report
+          </button>
+        </div>
         <section class="reports-page-grid">
           <!-- Expanded Doughnut Chart -->
           <div class="card-widget">

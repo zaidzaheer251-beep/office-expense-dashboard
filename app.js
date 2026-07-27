@@ -231,6 +231,10 @@ function init() {
   if (addExpenseForm) addExpenseForm.addEventListener('submit', handleAddExpense);
   if (editLimitBtn) editLimitBtn.addEventListener('click', handleEditLimit);
   themeToggleBtn.addEventListener('click', toggleTheme);
+  
+  // Listeners: Reports Export
+  const downloadPdfBtn = document.getElementById('download-pdf-btn');
+  if (downloadPdfBtn) downloadPdfBtn.addEventListener('click', downloadPDFReport);
 
   // Listeners: Payments
   if (addFundingForm) addFundingForm.addEventListener('submit', handleAddFunding);
@@ -1167,6 +1171,164 @@ function exportToCSV() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+async function downloadPDFReport() {
+  const downloadBtn = document.getElementById('download-pdf-btn');
+  if (downloadBtn) {
+    downloadBtn.disabled = true;
+    downloadBtn.textContent = 'Generating PDF...';
+  }
+
+  try {
+    const stats = calculateTotals();
+    const today = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
+    
+    // 1. Generate category breakdown rows
+    const catSums = {};
+    Object.keys(CATEGORY_META).forEach(k => catSums[k] = 0);
+    transactions.forEach(tx => {
+      const cat = tx.category || 'other';
+      if (catSums[cat] !== undefined) catSums[cat] += parseFloat(tx.amount);
+      else catSums['other'] += parseFloat(tx.amount);
+    });
+    
+    let catRowsHtml = '';
+    Object.keys(catSums).forEach(k => {
+      if (catSums[k] > 0) {
+        const pct = ((catSums[k] / (monthlyLimit || 1)) * 100).toFixed(0);
+        catRowsHtml += `
+          <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">${CATEGORY_META[k].name}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">${formatPKR(catSums[k])}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #64748b;">${pct}% of Limit</td>
+          </tr>
+        `;
+      }
+    });
+    
+    // 2. Generate transactions table rows
+    let txRowsHtml = '';
+    const sortedTxs = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date));
+    sortedTxs.forEach(tx => {
+      const d = new Date(tx.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+      txRowsHtml += `
+        <tr>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-size: 11px; font-family: monospace; color: #64748b;">${(tx.id || '').substring(0, 8)}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 500;">${tx.item}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; text-transform: capitalize;"><span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background-color: #f1f5f9; color: #475569;">${CATEGORY_META[tx.category]?.name.split(' ')[0] || tx.category}</span></td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-size: 11px; color: #64748b;">${d}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 600; color: #0f172a;">${formatPKR(tx.amount)}</td>
+        </tr>
+      `;
+    });
+    
+    if (txRowsHtml === '') {
+      txRowsHtml = `<tr><td colspan="5" style="padding: 30px; text-align: center; color: #64748b;">No transactions registered.</td></tr>`;
+    }
+
+    // 3. Create print report template wrapper
+    const reportEl = document.createElement('div');
+    reportEl.style.padding = '40px';
+    reportEl.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
+    reportEl.style.color = '#0f172a';
+    reportEl.style.backgroundColor = '#ffffff';
+    
+    reportEl.innerHTML = `
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #6366f1; padding-bottom: 20px; margin-bottom: 30px;">
+        <div>
+          <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #6366f1;">Approx Expense</h1>
+          <p style="margin: 5px 0 0 0; font-size: 14px; color: #64748b; font-weight: 500;">Personal Expense & Budget Statement</p>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-weight: 700; color: #6366f1; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; background-color: #f5f3ff; border-radius: 6px;">Report Statement</span>
+          <p style="margin: 8px 0 0 0; font-size: 12px; color: #64748b;">Generated: <strong>${today}</strong></p>
+          <p style="margin: 3px 0 0 0; font-size: 12px; color: #64748b;">Account Holder: <strong>${currentProfile.username}</strong></p>
+        </div>
+      </div>
+      
+      <!-- Summary Metrics -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 35px;">
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Received</span>
+          <div style="font-size: 18px; font-weight: 800; color: #10b981; margin-top: 5px;">${formatPKR(stats.totalReceived)}</div>
+        </div>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Expenses</span>
+          <div style="font-size: 18px; font-weight: 800; color: #ef4444; margin-top: 5px;">${formatPKR(stats.totalSpent)}</div>
+        </div>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Remaining Limit</span>
+          <div style="font-size: 18px; font-weight: 800; color: ${stats.remaining < 0 ? '#ef4444' : '#f59e0b'}; margin-top: 5px;">${formatPKR(stats.remaining)}</div>
+        </div>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Net Balance</span>
+          <div style="font-size: 18px; font-weight: 800; color: #6366f1; margin-top: 5px;">${formatPKR(stats.balance)}</div>
+        </div>
+      </div>
+
+      <!-- Category Breakdown Table -->
+      <div style="margin-bottom: 35px;">
+        <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-left: 4px solid #6366f1; padding-left: 8px;">Category Summary</h3>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+          <thead>
+            <tr style="background-color: #f8fafc;">
+              <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700; color: #475569;">Category</th>
+              <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700; color: #475569; text-align: right;">Amount Spent</th>
+              <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700; color: #475569; text-align: right;">Budget Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${catRowsHtml || '<tr><td colspan="3" style="padding: 15px; text-align: center; color: #64748b;">No expenses recorded yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Detailed Ledger Table -->
+      <div>
+        <h3 style="font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 12px; border-left: 4px solid #6366f1; padding-left: 8px;">Detailed Ledger Statement</h3>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+          <thead>
+            <tr style="background-color: #f8fafc; color: #475569;">
+              <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700;">TXID</th>
+              <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700;">Description</th>
+              <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700;">Category</th>
+              <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700;">Date</th>
+              <th style="padding: 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${txRowsHtml}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Footer -->
+      <div style="margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; font-size: 11px; color: #94a3b8;">
+        Generated securely via Approx Expense client. All records are subject to local audit policies.
+      </div>
+    `;
+
+    // 4. Trigger PDF Download using html2pdf
+    const opt = {
+      margin:       [0.4, 0.4, 0.4, 0.4],
+      filename:     `Expense_Report_${today.replace(/ /g, '_')}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // Generate and download
+    await html2pdf().set(opt).from(reportEl).save();
+  } catch (err) {
+    alert("Failed to export PDF: " + err.message);
+  } finally {
+    if (downloadBtn) {
+      downloadBtn.disabled = false;
+      downloadBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF Report';
+    }
+  }
 }
 
 // 11. Chat View logic
