@@ -203,6 +203,8 @@ const userDisplayName = document.getElementById('user-display-name');
 const userDisplayRole = document.getElementById('user-display-role');
 
 let isSignUpMode = false;
+let isForgotPasswordMode = false;
+let isUpdatePasswordMode = false;
 
 // Initialize Application
 function init() {
@@ -335,30 +337,130 @@ function setupNavigation() {
 
 // Auth UI toggles and form submissions
 function setupAuthListeners() {
-  if (authToggleLink) {
-    authToggleLink.addEventListener('click', (e) => {
+  const togglePasswordBtn = document.getElementById('toggle-password-btn');
+  const forgotPasswordLink = document.getElementById('forgot-password-link');
+  const authEmailGroup = document.getElementById('auth-email-group');
+  const authPasswordGroup = document.getElementById('auth-password-group');
+  const authForgotLinkWrapper = document.getElementById('auth-forgot-link-wrapper');
+
+  // Toggle Password Visibility
+  if (togglePasswordBtn && authPassword) {
+    togglePasswordBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      isSignUpMode = !isSignUpMode;
-      if (isSignUpMode) {
-        authTitle.textContent = 'Create Account';
-        authSubtitle.textContent = 'Register to start tracking office expenses';
-        authSubmitBtn.textContent = 'Sign Up';
-        authToggleText.textContent = 'Already have an account?';
-        authToggleLink.textContent = 'Sign In';
-        authUsernameGroup.style.display = 'block';
-        authUsername.required = true;
-      } else {
-        authTitle.textContent = 'Welcome Back';
-        authSubtitle.textContent = 'Sign in to manage your office expenses';
-        authSubmitBtn.textContent = 'Sign In';
-        authToggleText.textContent = "Don't have an account?";
-        authToggleLink.textContent = 'Sign Up';
-        authUsernameGroup.style.display = 'none';
-        authUsername.required = false;
+      const isPassword = authPassword.type === 'password';
+      authPassword.type = isPassword ? 'text' : 'password';
+      const icon = togglePasswordBtn.querySelector('i');
+      if (icon) {
+        icon.className = isPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
       }
     });
   }
 
+  // Helper to update Auth card visual state
+  function updateAuthUI() {
+    // Reset password input type to password when switching modes
+    if (authPassword) authPassword.type = 'password';
+    if (togglePasswordBtn) {
+      const icon = togglePasswordBtn.querySelector('i');
+      if (icon) icon.className = 'fa-regular fa-eye';
+    }
+
+    if (isUpdatePasswordMode) {
+      authTitle.textContent = 'Update Password';
+      authSubtitle.textContent = 'Enter your new password below';
+      authSubmitBtn.textContent = 'Update Password';
+      if (authUsernameGroup) authUsernameGroup.style.display = 'none';
+      if (authEmailGroup) authEmailGroup.style.display = 'none';
+      if (authPasswordGroup) authPasswordGroup.style.display = 'block';
+      if (authForgotLinkWrapper) authForgotLinkWrapper.style.display = 'none';
+      authToggleText.textContent = '';
+      authToggleLink.textContent = 'Cancel';
+      authUsername.required = false;
+      authEmail.required = false;
+      authPassword.required = true;
+    } else if (isForgotPasswordMode) {
+      authTitle.textContent = 'Reset Password';
+      authSubtitle.textContent = 'Enter email to receive reset link';
+      authSubmitBtn.textContent = 'Send Reset Link';
+      if (authUsernameGroup) authUsernameGroup.style.display = 'none';
+      if (authEmailGroup) authEmailGroup.style.display = 'block';
+      if (authPasswordGroup) authPasswordGroup.style.display = 'none';
+      if (authForgotLinkWrapper) authForgotLinkWrapper.style.display = 'none';
+      authToggleText.textContent = 'Remembered your password?';
+      authToggleLink.textContent = 'Sign In';
+      authUsername.required = false;
+      authEmail.required = true;
+      authPassword.required = false;
+    } else if (isSignUpMode) {
+      authTitle.textContent = 'Create Account';
+      authSubtitle.textContent = 'Register to start tracking office expenses';
+      authSubmitBtn.textContent = 'Sign Up';
+      authToggleText.textContent = 'Already have an account?';
+      authToggleLink.textContent = 'Sign In';
+      if (authUsernameGroup) authUsernameGroup.style.display = 'block';
+      if (authEmailGroup) authEmailGroup.style.display = 'block';
+      if (authPasswordGroup) authPasswordGroup.style.display = 'block';
+      if (authForgotLinkWrapper) authForgotLinkWrapper.style.display = 'none';
+      authUsername.required = true;
+      authEmail.required = true;
+      authPassword.required = true;
+    } else {
+      // Sign In mode (default)
+      authTitle.textContent = 'Welcome Back';
+      authSubtitle.textContent = 'Sign in to manage your office expenses';
+      authSubmitBtn.textContent = 'Sign In';
+      authToggleText.textContent = "Don't have an account?";
+      authToggleLink.textContent = 'Sign Up';
+      if (authUsernameGroup) authUsernameGroup.style.display = 'none';
+      if (authEmailGroup) authEmailGroup.style.display = 'block';
+      if (authPasswordGroup) authPasswordGroup.style.display = 'block';
+      if (authForgotLinkWrapper) authForgotLinkWrapper.style.display = 'block';
+      authUsername.required = false;
+      authEmail.required = true;
+      authPassword.required = true;
+    }
+  }
+
+  // Toggle SignUp Mode
+  if (authToggleLink) {
+    authToggleLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isUpdatePasswordMode) {
+        // Cancel update password
+        isUpdatePasswordMode = false;
+        window.location.hash = '';
+        updateAuthUI();
+      } else if (isForgotPasswordMode) {
+        isForgotPasswordMode = false;
+        isSignUpMode = false;
+        updateAuthUI();
+      } else {
+        isSignUpMode = !isSignUpMode;
+        updateAuthUI();
+      }
+    });
+  }
+
+  // Trigger Forgot Password mode
+  if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      isForgotPasswordMode = true;
+      isSignUpMode = false;
+      isUpdatePasswordMode = false;
+      updateAuthUI();
+    });
+  }
+
+  // Expose switcher for recovery token detection
+  window.triggerUpdatePasswordMode = () => {
+    isUpdatePasswordMode = true;
+    isForgotPasswordMode = false;
+    isSignUpMode = false;
+    updateAuthUI();
+  };
+
+  // Auth Form Submit Handler
   if (authForm) {
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -367,10 +469,32 @@ function setupAuthListeners() {
       const username = authUsername.value.trim();
       
       authSubmitBtn.disabled = true;
-      authSubmitBtn.textContent = isSignUpMode ? 'Signing Up...' : 'Signing In...';
+      
+      if (isForgotPasswordMode) {
+        authSubmitBtn.textContent = 'Sending Link...';
+      } else if (isUpdatePasswordMode) {
+        authSubmitBtn.textContent = 'Updating...';
+      } else {
+        authSubmitBtn.textContent = isSignUpMode ? 'Signing Up...' : 'Signing In...';
+      }
       
       try {
-        if (isSignUpMode) {
+        if (isUpdatePasswordMode) {
+          const { error } = await supabase.auth.updateUser({ password: password });
+          if (error) throw error;
+          alert('Password updated successfully! You can now sign in.');
+          isUpdatePasswordMode = false;
+          window.location.hash = '';
+          updateAuthUI();
+        } else if (isForgotPasswordMode) {
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + window.location.pathname
+          });
+          if (error) throw error;
+          alert('Password reset link sent to your email address! Please check your inbox.');
+          isForgotPasswordMode = false;
+          updateAuthUI();
+        } else if (isSignUpMode) {
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -378,13 +502,14 @@ function setupAuthListeners() {
               emailRedirectTo: window.location.origin + window.location.pathname,
               data: {
                 username: username || email.split('@')[0],
-                role: 'employee' // New users default to employee role
+                role: 'employee'
               }
             }
           });
           if (error) throw error;
           alert('Registration successful! If required, please confirm your email, otherwise try logging in.');
-          authToggleLink.click();
+          isSignUpMode = false;
+          updateAuthUI();
         } else {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
@@ -393,7 +518,13 @@ function setupAuthListeners() {
         alert(err.message || 'Authentication error');
       } finally {
         authSubmitBtn.disabled = false;
-        authSubmitBtn.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
+        if (isForgotPasswordMode) {
+          authSubmitBtn.textContent = 'Send Reset Link';
+        } else if (isUpdatePasswordMode) {
+          authSubmitBtn.textContent = 'Update Password';
+        } else {
+          authSubmitBtn.textContent = isSignUpMode ? 'Sign Up' : 'Sign In';
+        }
       }
     });
   }
@@ -427,6 +558,13 @@ async function checkSession() {
       handleAuthState(demoSession);
     }
     return;
+  }
+
+  // Check if we have a recovery token in the URL hash
+  if (window.location.hash && window.location.hash.includes('type=recovery')) {
+    if (window.triggerUpdatePasswordMode) {
+      window.triggerUpdatePasswordMode();
+    }
   }
 
   try {
