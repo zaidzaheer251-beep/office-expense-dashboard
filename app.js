@@ -602,6 +602,7 @@ async function loadDatabaseData() {
     const { data: txs, error: txError } = await supabase
       .from('transactions')
       .select('*')
+      .eq('user_id', currentUser.id)
       .order('date', { ascending: false });
     if (txError) throw txError;
     transactions = txs || [];
@@ -610,6 +611,7 @@ async function loadDatabaseData() {
     const { data: fund, error: fundError } = await supabase
       .from('funding')
       .select('*')
+      .eq('user_id', currentUser.id)
       .order('date', { ascending: false });
     if (fundError) throw fundError;
     fundingHistory = fund || [];
