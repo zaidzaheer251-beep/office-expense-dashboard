@@ -374,7 +374,7 @@ function setupAuthListeners() {
               emailRedirectTo: window.location.origin + window.location.pathname,
               data: {
                 username: username || email.split('@')[0],
-                role: 'admin' // First users default to admin for management
+                role: 'employee' // New users default to employee role
               }
             }
           });
