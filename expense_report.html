@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Office Expense Summary Report</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --text-dark: #0f172a;
+      --text-light: #64748b;
+      --bg-gray: #f8fafc;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-dark);
+      background-color: var(--bg-gray);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .report-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border);
+    }
+
+    .header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 30px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .header-left h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 5px;
+    }
+
+    .header-left p {
+      color: var(--text-light);
+      font-size: 14px;
+    }
+
+    .header-right {
+      text-align: right;
+      font-size: 13px;
+      color: var(--text-light);
+    }
+
+    .header-right strong {
+      color: var(--text-dark);
+      display: block;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 35px;
+    }
+
+    .card {
+      background: var(--bg-gray);
+      padding: 20px 15px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-light);
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .card-value {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .card.spent .card-value { color: var(--text-dark); }
+    .card.received .card-value { color: var(--success); }
+    .card.remaining .card-value { color: var(--warning); }
+    .card.balance .card-value { color: var(--danger); }
+
+    /* Category list */
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: var(--text-dark);
+      border-left: 4px solid var(--primary);
+      padding-left: 10px;
+    }
+
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 35px;
+    }
+
+    .cat-box {
+      border: 1px solid var(--border);
+      padding: 12px 15px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .cat-name {
+      font-weight: 600;
+      color: var(--text-light);
+    }
+
+    .cat-val {
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    /* Table */
+    .table-wrapper {
+      margin-top: 20px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background: var(--bg-gray);
+      color: var(--text-light);
+      font-weight: 700;
+      padding: 12px 15px;
+      border-bottom: 2px solid var(--border);
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dark);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    .badge.milk { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .badge.food { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .badge.snacks { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .badge.tea-sugar { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+    .badge.household { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+    .badge.other { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+
+    /* Action bar */
+    .action-bar {
+      margin-top: 30px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-print {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+      transition: all 0.2s;
+    }
+
+    .btn-print:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(79, 70, 229, 0.3);
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+      .report-container {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      .btn-print {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .header {
+        flex-direction: column;
+        gap: 15px;
+      }
+      .header-right {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="report-container">
+    
+    <!-- Report Header -->
+    <div class="header">
+      <div class="header-left">
+        <h1>Office Expense Report</h1>
+        <p>Monthly statements and transaction log summary</p>
+      </div>
+      <div class="header-right">
+        <strong>Prepared by: Aamir Computer</strong>
+        <div>Date Range: 07 Jul 2026 - 25 Jul 2026</div>
+        <div>Total Logs: 32 Items</div>
+      </div>
+    </div>
+
+    <!-- Metrics summary -->
+    <h2 class="section-title">Financial Summary</h2>
+    <div class="summary-grid">
+      <div class="card received">
+        <div class="card-title">Total Received</div>
+        <div class="card-value">Rs 5,500</div>
+      </div>
+      <div class="card spent">
+        <div class="card-title">Total Expenses</div>
+        <div class="card-value">Rs 6,740</div>
+      </div>
+      <div class="card remaining">
+        <div class="card-title">Remaining Limit</div>
+        <div class="card-value">Rs 3,260</div>
+      </div>
+      <div class="card balance">
+        <div class="card-title">Net Balance</div>
+        <div class="card-value" style="color: var(--danger)">-Rs 1,240</div>
+      </div>
+    </div>
+
+    <!-- Category Summary -->
+    <h2 class="section-title">Category Breakdown</h2>
+    <div class="category-grid">
+      <div class="cat-box">
+        <span class="cat-name">Milk (Dhood)</span>
+        <span class="cat-val">Rs 2,290</span>
+      </div>
+      <div class="cat-box">
+        <span class="cat-name">Khana / Meals</span>
+        <span class="cat-val">Rs 1,880</span>
+      </div>
+      <div class="cat-box">
+        <span class="cat-name">Household</span>
+        <span class="cat-val">Rs 1,120</span>
+      </div>
+      <div class="cat-box">
+        <span class="cat-name">Snacks</span>
+        <span class="cat-val">Rs 820</span>
+      </div>
+      <div class="cat-box">
+        <span class="cat-name">Tea & Sugar</span>
+        <span class="cat-val">Rs 610</span>
+      </div>
+      <div class="cat-box">
+        <span class="cat-name">Others</span>
+        <span class="cat-val">Rs 20</span>
+      </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <h2 class="section-title">Transactions Log</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Item Description</th>
+            <th>Category</th>
+            <th style="text-align: right;">Amount (PKR)</th>
+          </tr>
+        </thead>
+        <tbody id="report-rows">
+          <!-- Populated by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Print Button -->
+    <div class="action-bar">
+      <button class="btn-print" onclick="window.print()">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-top: -2px;">
+          <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/>
+        </svg>
+        Print / Save PDF
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    // Parsed notepad data
+    const DATA = [
+      { date: "2026-07-07", item: "Dhood", category: "milk", amount: 150 },
+      { date: "2026-07-07", item: "Dhani bhaly", category: "snacks", amount: 150 },
+      { date: "2026-07-07", item: "party", category: "food", amount: 1000 },
+      { date: "2026-07-08", item: "Dhood", category: "milk", amount: 150 },
+      { date: "2026-07-08", item: "Biscutes", category: "snacks", amount: 140 },
+      { date: "2026-07-08", item: "Roti", category: "food", amount: 80 },
+      { date: "2026-07-09", item: "Dahai bhaly", category: "snacks", amount: 150 },
+      { date: "2026-07-09", item: "Dhood", category: "milk", amount: 150 },
+      { date: "2026-07-09", item: "khana", category: "food", amount: 520 },
+      { date: "2026-07-11", item: "dhai bhaly", category: "snacks", amount: 150 },
+      { date: "2026-07-11", item: "cheni", category: "tea-sugar", amount: 90 },
+      { date: "2026-07-11", item: "pati", category: "tea-sugar", amount: 100 },
+      { date: "2026-07-11", item: "Dhood", category: "milk", amount: 150 },
+      { date: "2026-07-13", item: "Dhood", category: "milk", amount: 150 },
+      { date: "2026-07-15", item: "dhood", category: "milk", amount: 100 },
+      { date: "2026-07-15", item: "Biscute", category: "snacks", amount: 80 },
+      { date: "2026-07-15", item: "pelats", category: "household", amount: 1120 },
+      { date: "2026-07-16", item: "dhood", category: "milk", amount: 150 },
+      { date: "2026-07-17", item: "dhood", category: "milk", amount: 150 },
+      { date: "2026-07-18", item: "nashta", category: "food", amount: 280 },
+      { date: "2026-07-18", item: "pati", category: "tea-sugar", amount: 100 },
+      { date: "2026-07-18", item: "dhood", category: "milk", amount: 250 },
+      { date: "2026-07-20", item: "coffee", category: "tea-sugar", amount: 70 },
+      { date: "2026-07-20", item: "pudina", category: "other", amount: 20 },
+      { date: "2026-07-20", item: "chini", category: "tea-sugar", amount: 150 },
+      { date: "2026-07-20", item: "dhood", category: "milk", amount: 220 },
+      { date: "2026-07-21", item: "Dhood", category: "milk", amount: 200 },
+      { date: "2026-07-23", item: "dhood", category: "milk", amount: 170 },
+      { date: "2026-07-23", item: "Pati", category: "tea-sugar", amount: 100 },
+      { date: "2026-07-24", item: "dhood", category: "milk", amount: 150 },
+      { date: "2026-07-24", item: "dahi bhali", category: "snacks", amount: 150 },
+      { date: "2026-07-25", item: "Dhood", category: "milk", amount: 150 }
+    ];
+
+    // Populate rows
+    const tbody = document.getElementById('report-rows');
+    // Sort chronological ascending
+    DATA.forEach(tx => {
+      const row = document.createElement('tr');
+      const formattedDate = new Date(tx.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+      
+      let categoryName = tx.category;
+      if (tx.category === 'milk') categoryName = "Milk (Dhood)";
+      else if (tx.category === 'food') categoryName = "Khana / Meals";
+      else if (tx.category === 'snacks') categoryName = "Snacks";
+      else if (tx.category === 'tea-sugar') categoryName = "Tea & Sugar";
+      else if (tx.category === 'household') categoryName = "Household";
+      else if (tx.category === 'other') categoryName = "Other";
+
+      row.innerHTML = `
+        <td style="font-weight: 500;">${formattedDate}</td>
+        <td style="font-weight: 600; text-transform: capitalize;">${tx.item}</td>
+        <td><span class="badge ${tx.category}">${categoryName}</span></td>
+        <td style="text-align: right; font-weight: 700; font-family: monospace;">Rs ${tx.amount.toLocaleString()}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  </script>
+</body>
+</html>

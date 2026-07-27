@@ -1,0 +1,50 @@
+07-07-2026
+Dhood 150
+Dhani bhaly 150
+party 1000
+08-07-2026
+Dhood 150
+Biscutes 140
+Roti 80
+09-07-2026
+Dahai bhaly 150
+Dhood 150 
+khana 520
+11-07-2026
+dhai bhaly 150
+cheni 90
+pati 100
+Dhood 150
+13-07-2026
+Dhood 150
+15-07-2026
+dhood 100
+Biscute 80
+pelats 1120
+16-07-2026
+dhood 150
+17-07-2026
+dhood 150
+18-07-2026
+nashta 280
+pati 100
+dhood 250
+20-07-2026
+coffee 70
+pudina 20 
+chini 150
+dhood 220 
+21-07-2026
+Dhood 200
+23-07-2026
+dhood 170
+Pati 100
+24-07-2026
+dhood 150
+dahi bhali 150
+25-07-2026
+Dhood 150
+
+Tottle monthly limit 10000
+Tottal recive 5500
+
