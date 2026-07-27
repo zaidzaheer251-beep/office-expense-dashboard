@@ -134,73 +134,77 @@ const TAB_DESCRIPTIONS = {
   "calendar-view": { title: "Calendar View", sub: "Track dates of office expenses visually." }
 };
 
-// UI Elements
-const searchInput = document.getElementById('search-input');
-const pageTitle = document.getElementById('page-title');
-const pageSubtitle = document.getElementById('page-subtitle');
-const themeToggleBtn = document.getElementById('theme-toggle');
+// UI Elements (declared globally, populated on DOMContentLoaded)
+let searchInput, pageTitle, pageSubtitle, themeToggleBtn;
+let metricReceived, metricSpent, metricSpentSub, metricRemaining, metricRemainingSub, metricBalance, metricBalanceSub;
+let transactionRows, categoryFilter, reportFilter, categoryListContainer, budgetPctText, budgetAlertMsg, addExpenseForm, editLimitBtn;
+let paymentRows, addFundingForm;
+let detailedTransactionRows, advCategoryFilter, advSortFilter, advStartDate, advEndDate, resetFiltersBtn, exportCsvBtn, filteredStatsText;
+let chatFeed, chatForm, chatInput;
+let financialInsightsBox;
+let calendarCells, calendarMonthYear, calPrevBtn, calNextBtn;
+let authForm, authTitle, authSubtitle, authSubmitBtn, authToggleLink, authToggleText, authUsernameGroup, authUsername, authEmail, authPassword, logoutBtn, userDisplayName, userDisplayRole;
 
-// Dashboard metrics elements
-const metricReceived = document.getElementById('metric-received');
-const metricSpent = document.getElementById('metric-spent');
-const metricSpentSub = document.getElementById('metric-spent-sub');
-const metricRemaining = document.getElementById('metric-remaining');
-const metricRemainingSub = document.getElementById('metric-remaining-sub');
-const metricBalance = document.getElementById('metric-balance');
-const metricBalanceSub = document.getElementById('metric-balance-sub');
-
-// Dashboard tables and panels
-const transactionRows = document.getElementById('transaction-rows');
-const categoryFilter = document.getElementById('category-filter');
-const reportFilter = document.getElementById('report-filter');
-const categoryListContainer = document.getElementById('category-list-container');
-const budgetPctText = document.getElementById('budget-pct-text');
-const budgetAlertMsg = document.getElementById('budget-alert-msg');
-const addExpenseForm = document.getElementById('add-expense-form');
-const editLimitBtn = document.getElementById('edit-limit-btn');
-
-// Payments View Elements
-const paymentRows = document.getElementById('payment-rows');
-const addFundingForm = document.getElementById('add-funding-form');
-
-// Transactions View Elements
-const detailedTransactionRows = document.getElementById('detailed-transaction-rows');
-const advCategoryFilter = document.getElementById('adv-category-filter');
-const advSortFilter = document.getElementById('adv-sort-filter');
-const advStartDate = document.getElementById('adv-start-date');
-const advEndDate = document.getElementById('adv-end-date');
-const resetFiltersBtn = document.getElementById('reset-filters-btn');
-const exportCsvBtn = document.getElementById('export-csv-btn');
-const filteredStatsText = document.getElementById('filtered-stats-text');
-
-// Chat View Elements
-const chatFeed = document.getElementById('chat-feed');
-const chatForm = document.getElementById('chat-form');
-const chatInput = document.getElementById('chat-input');
-
-// Reports View Elements
-const financialInsightsBox = document.getElementById('financial-insights-box');
-
-// Calendar View Elements
-const calendarCells = document.getElementById('calendar-cells');
-const calendarMonthYear = document.getElementById('calendar-month-year');
-const calPrevBtn = document.getElementById('cal-prev-btn');
-const calNextBtn = document.getElementById('cal-next-btn');
-
-// Auth Form elements
-const authForm = document.getElementById('auth-form');
-const authTitle = document.getElementById('auth-title');
-const authSubtitle = document.getElementById('auth-subtitle');
-const authSubmitBtn = document.getElementById('auth-submit-btn');
-const authToggleLink = document.getElementById('auth-toggle-link');
-const authToggleText = document.getElementById('auth-toggle-text');
-const authUsernameGroup = document.getElementById('auth-username-group');
-const authUsername = document.getElementById('auth-username');
-const authEmail = document.getElementById('auth-email');
-const authPassword = document.getElementById('auth-password');
-const logoutBtn = document.getElementById('logout-btn');
-const userDisplayName = document.getElementById('user-display-name');
-const userDisplayRole = document.getElementById('user-display-role');
+function initializeDOMElements() {
+  searchInput = document.getElementById('search-input');
+  pageTitle = document.getElementById('page-title');
+  pageSubtitle = document.getElementById('page-subtitle');
+  themeToggleBtn = document.getElementById('theme-toggle');
+  
+  metricReceived = document.getElementById('metric-received');
+  metricSpent = document.getElementById('metric-spent');
+  metricSpentSub = document.getElementById('metric-spent-sub');
+  metricRemaining = document.getElementById('metric-remaining');
+  metricRemainingSub = document.getElementById('metric-remaining-sub');
+  metricBalance = document.getElementById('metric-balance');
+  metricBalanceSub = document.getElementById('metric-balance-sub');
+  
+  transactionRows = document.getElementById('transaction-rows');
+  categoryFilter = document.getElementById('category-filter');
+  reportFilter = document.getElementById('report-filter');
+  categoryListContainer = document.getElementById('category-list-container');
+  budgetPctText = document.getElementById('budget-pct-text');
+  budgetAlertMsg = document.getElementById('budget-alert-msg');
+  addExpenseForm = document.getElementById('add-expense-form');
+  editLimitBtn = document.getElementById('edit-limit-btn');
+  
+  paymentRows = document.getElementById('payment-rows');
+  addFundingForm = document.getElementById('add-funding-form');
+  
+  detailedTransactionRows = document.getElementById('detailed-transaction-rows');
+  advCategoryFilter = document.getElementById('adv-category-filter');
+  advSortFilter = document.getElementById('adv-sort-filter');
+  advStartDate = document.getElementById('adv-start-date');
+  advEndDate = document.getElementById('adv-end-date');
+  resetFiltersBtn = document.getElementById('reset-filters-btn');
+  exportCsvBtn = document.getElementById('export-csv-btn');
+  filteredStatsText = document.getElementById('filtered-stats-text');
+  
+  chatFeed = document.getElementById('chat-feed');
+  chatForm = document.getElementById('chat-form');
+  chatInput = document.getElementById('chat-input');
+  
+  financialInsightsBox = document.getElementById('financial-insights-box');
+  
+  calendarCells = document.getElementById('calendar-cells');
+  calendarMonthYear = document.getElementById('calendar-month-year');
+  calPrevBtn = document.getElementById('cal-prev-btn');
+  calNextBtn = document.getElementById('cal-next-btn');
+  
+  authForm = document.getElementById('auth-form');
+  authTitle = document.getElementById('auth-title');
+  authSubtitle = document.getElementById('auth-subtitle');
+  authSubmitBtn = document.getElementById('auth-submit-btn');
+  authToggleLink = document.getElementById('auth-toggle-link');
+  authToggleText = document.getElementById('auth-toggle-text');
+  authUsernameGroup = document.getElementById('auth-username-group');
+  authUsername = document.getElementById('auth-username');
+  authEmail = document.getElementById('auth-email');
+  authPassword = document.getElementById('auth-password');
+  logoutBtn = document.getElementById('logout-btn');
+  userDisplayName = document.getElementById('user-display-name');
+  userDisplayRole = document.getElementById('user-display-role');
+}
 
 let isSignUpMode = false;
 let isForgotPasswordMode = false;
@@ -208,6 +212,7 @@ let isUpdatePasswordMode = false;
 
 // Initialize Application
 function init() {
+  initializeDOMElements();
   setupTheme();
   setupNavigation();
   setupAuthListeners();
