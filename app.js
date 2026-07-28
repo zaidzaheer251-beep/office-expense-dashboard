@@ -237,6 +237,8 @@ function init() {
   if (reportFilter) reportFilter.addEventListener('change', renderCharts);
   if (addExpenseForm) addExpenseForm.addEventListener('submit', handleAddExpense);
   if (editLimitBtn) editLimitBtn.addEventListener('click', handleEditLimit);
+  const editLimitBtnDash = document.getElementById('edit-limit-btn-dash');
+  if (editLimitBtnDash) editLimitBtnDash.addEventListener('click', handleEditLimit);
   themeToggleBtn.addEventListener('click', toggleTheme);
   
   // Listeners: Reports Export

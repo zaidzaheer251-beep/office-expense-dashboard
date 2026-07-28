@@ -1108,7 +1108,19 @@ body {
     margin: 0 !important;
   }
   
-  .sidebar-menu .menu-item i {
+  .sidebar-menu .menu-item a {
+    font-size: 0 !important; /* Hide text label on mobile */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: inherit !important;
+  }
+  
+  .sidebar-menu .menu-item a i {
     font-size: 20px !important; /* Touch friendly larger icons */
     margin: 0 !important;
   }
@@ -1122,46 +1134,7 @@ body {
   }
   
   .sidebar-footer {
-    display: flex !important;
-    align-items: center !important;
-    padding: 0 !important;
-    border-top: none !important;
-    margin-top: 0 !important;
-  }
-  
-  .sidebar-footer .user-profile {
-    padding: 0 !important;
-    background: none !important;
-    border: none !important;
-    flex-direction: row !important;
-    gap: 10px !important;
-    align-items: center !important;
-    width: auto !important;
-  }
-  
-  .sidebar-footer .user-avatar {
-    width: 32px !important;
-    height: 32px !important;
-    margin: 0 !important;
-  }
-  
-  .sidebar-footer .user-info {
-    display: none !important; /* Hide user name info */
-  }
-  
-  .sidebar-footer .logout-btn {
-    display: block !important;
-    margin: 0 !important;
-    background: none !important;
-    border: none !important;
-    color: var(--text-sidebar) !important;
-    font-size: 16px !important;
-    padding: 6px !important;
-    cursor: pointer;
-  }
-  
-  .sidebar-footer .logout-btn:hover {
-    color: #ef4444 !important;
+    display: none !important; /* Hide monthly limit alert and edit button in sidebar on mobile */
   }
   
   .main-layout-container {
