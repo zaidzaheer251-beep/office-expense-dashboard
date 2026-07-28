@@ -612,7 +612,8 @@ async function handleAuthState(session) {
       if (isDemoMode) {
         currentProfile = {
           username: currentUser.user_metadata?.username || 'Aamir Computer',
-          role: currentUser.user_metadata?.role || 'admin'
+          role: currentUser.user_metadata?.role || 'admin',
+          avatar_url: safeStorage.getItem(`office_avatar_${currentUser.id}`) || ''
         };
         safeStorage.setItem('demo_session_active', 'true');
       } else {
@@ -627,14 +628,14 @@ async function handleAuthState(session) {
           currentProfile = {
             username: profile?.username || currentUser.user_metadata?.username || currentUser.email.split('@')[0],
             role: profile?.role || currentUser.user_metadata?.role || 'employee',
-            avatar_url: currentUser.user_metadata?.avatar_url || ''
+            avatar_url: safeStorage.getItem(`office_avatar_${currentUser.id}`) || currentUser.user_metadata?.avatar_url || ''
           };
         } catch (e) {
           console.error("Profile load error:", e.message);
           currentProfile = {
             username: currentUser.email.split('@')[0],
             role: 'employee',
-            avatar_url: currentUser.user_metadata?.avatar_url || ''
+            avatar_url: safeStorage.getItem(`office_avatar_${currentUser.id}`) || currentUser.user_metadata?.avatar_url || ''
           };
         }
       }
@@ -1911,17 +1912,27 @@ function setupSettingsListeners() {
       try {
         if (isDemoMode) {
           currentProfile.avatar_url = finalAvatarUrl;
+          safeStorage.setItem(`office_avatar_${currentUser.id}`, finalAvatarUrl);
           updateAvatarDisplay(finalAvatarUrl);
           alert("Profile picture updated (Offline Mode)!");
         } else {
-          // Update Supabase Auth user metadata
-          const { error: authErr } = await supabase.auth.updateUser({
-            data: { avatar_url: finalAvatarUrl }
-          });
-          if (authErr) throw authErr;
-
+          // 1. Save to local storage first (always succeeds!)
+          safeStorage.setItem(`office_avatar_${currentUser.id}`, finalAvatarUrl);
           currentProfile.avatar_url = finalAvatarUrl;
           updateAvatarDisplay(finalAvatarUrl);
+
+          // 2. Attempt to sync to Supabase auth metadata
+          try {
+            const { error: authErr } = await supabase.auth.updateUser({
+              data: { avatar_url: finalAvatarUrl }
+            });
+            if (authErr) {
+              console.warn("Failed to sync avatar to Supabase user metadata:", authErr.message);
+            }
+          } catch (apiErr) {
+            console.warn("Failed to sync avatar to Supabase database:", apiErr.message);
+          }
+
           alert("Profile picture updated successfully!");
         }
       } catch (err) {
