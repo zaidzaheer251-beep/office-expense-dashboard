@@ -509,7 +509,7 @@ function setupAuthListeners() {
               emailRedirectTo: window.location.origin + window.location.pathname,
               data: {
                 username: username || email.split('@')[0],
-                role: 'personal'
+                role: 'employee'
               }
             }
           });
@@ -611,13 +611,13 @@ async function handleAuthState(session) {
 
           currentProfile = profile || {
             username: currentUser.user_metadata?.username || currentUser.email.split('@')[0],
-            role: currentUser.user_metadata?.role || 'personal'
+            role: currentUser.user_metadata?.role || 'employee'
           };
         } catch (e) {
           console.error("Profile load error:", e.message);
           currentProfile = {
             username: currentUser.email.split('@')[0],
-            role: 'personal'
+            role: 'employee'
           };
         }
       }
@@ -749,6 +749,15 @@ async function loadDatabaseData() {
 
     renderAll();
     return;
+  }
+
+  if (!currentUser) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+    } else {
+      return;
+    }
   }
 
   try {
@@ -1151,6 +1160,18 @@ function renderPaymentsTable() {
 // Add Funding
 async function handleAddFunding(e) {
   e.preventDefault();
+  
+  if (!isDemoMode && !currentUser) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+    } else {
+      alert("Error: No active user session found. Please sign in again.");
+      window.location.reload();
+      return;
+    }
+  }
+  
   const sourceInput = document.getElementById('funding-source');
   const amountInput = document.getElementById('funding-amount');
   const dateInput = document.getElementById('funding-date');
@@ -1682,6 +1703,17 @@ function changeMonth(direction) {
 // 14. Action Handlers
 async function handleAddExpense(e) {
   e.preventDefault();
+  
+  if (!isDemoMode && !currentUser) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+    } else {
+      alert("Error: No active user session found. Please sign in again.");
+      window.location.reload();
+      return;
+    }
+  }
   
   const itemInput = document.getElementById('expense-item');
   const amountInput = document.getElementById('expense-amount');
