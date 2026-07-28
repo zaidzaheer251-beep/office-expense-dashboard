@@ -105,8 +105,8 @@ let currentUser = null;
 let currentProfile = null;
 let chatSubscription = null;
 
-// Category metadata config
-const CATEGORY_META = {
+// Category metadata config (can be customized by user)
+let CATEGORY_META = {
   milk: { name: "Milk (Dhood)", color: "#3b82f6" },
   food: { name: "Khana / Meals", color: "#10b981" },
   snacks: { name: "Snacks", color: "#f59e0b" },
@@ -114,6 +114,70 @@ const CATEGORY_META = {
   household: { name: "Household / Plates", color: "#ec4899" },
   other: { name: "Other Expenses", color: "#64748b" }
 };
+
+let userCategories = [];
+
+function loadCategories() {
+  if (!currentUser) return;
+  const saved = safeStorage.getItem(`office_categories_${currentUser.id}`);
+  if (saved) {
+    userCategories = JSON.parse(saved);
+  } else {
+    // Clean, default categories for new users
+    userCategories = [
+      { id: 'food', name: 'Food / Meals', color: '#10b981' },
+      { id: 'travel', name: 'Travel / Fuel', color: '#3b82f6' },
+      { id: 'utilities', name: 'Utilities / Bills', color: '#f59e0b' },
+      { id: 'office-supplies', name: 'Office Supplies', color: '#a855f7' },
+      { id: 'other', name: 'Other Expenses', color: '#64748b' }
+    ];
+    safeStorage.setItem(`office_categories_${currentUser.id}`, JSON.stringify(userCategories));
+  }
+  
+  // Rebuild CATEGORY_META dynamically
+  CATEGORY_META = {};
+  userCategories.forEach(cat => {
+    CATEGORY_META[cat.id] = { name: cat.name, color: cat.color };
+  });
+  
+  populateCategoryDropdowns();
+}
+
+function populateCategoryDropdowns() {
+  const expenseCategory = document.getElementById('expense-category');
+  const categoryFilter = document.getElementById('category-filter');
+  const advCategoryFilter = document.getElementById('adv-category-filter');
+  
+  if (expenseCategory) {
+    expenseCategory.innerHTML = '';
+    userCategories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id;
+      opt.textContent = cat.name;
+      expenseCategory.appendChild(opt);
+    });
+  }
+  
+  if (categoryFilter) {
+    categoryFilter.innerHTML = '<option value="all">All Categories</option>';
+    userCategories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id;
+      opt.textContent = cat.name;
+      categoryFilter.appendChild(opt);
+    });
+  }
+  
+  if (advCategoryFilter) {
+    advCategoryFilter.innerHTML = '<option value="all">All Categories</option>';
+    userCategories.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat.id;
+      opt.textContent = cat.name;
+      advCategoryFilter.appendChild(opt);
+    });
+  }
+}
 
 // Calendar Helper State
 let currentCalDate = new Date(2026, 6, 1); // July 2026
@@ -639,6 +703,9 @@ async function handleAuthState(session) {
           };
         }
       }
+
+      // Load custom categories for this user!
+      loadCategories();
 
       if (userDisplayName) userDisplayName.textContent = currentProfile.username;
       if (userDisplayRole) {
@@ -1795,6 +1862,7 @@ function setupSettingsListeners() {
       if (settingsAvatarPreview) {
         settingsAvatarPreview.src = currentProfile.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop';
       }
+      renderSettingsCategories();
     });
   }
 
@@ -1991,6 +2059,93 @@ function setupSettingsListeners() {
         }
       }
     });
+  }
+  // Manage Categories Forms & Functions
+  const addCategoryForm = document.getElementById('settings-add-category-form');
+  if (addCategoryForm) {
+    addCategoryForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById('new-category-name');
+      const colorInput = document.getElementById('new-category-color');
+      
+      const name = nameInput.value.trim();
+      const color = colorInput.value;
+      if (!name) return;
+      
+      const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      
+      // Check for duplicates
+      if (userCategories.some(cat => cat.id === id)) {
+        alert("A category with this name already exists!");
+        return;
+      }
+      
+      const newCat = { id, name, color };
+      userCategories.push(newCat);
+      safeStorage.setItem(`office_categories_${currentUser.id}`, JSON.stringify(userCategories));
+      
+      nameInput.value = '';
+      
+      // Refresh
+      loadCategories();
+      renderSettingsCategories();
+      renderAll();
+    });
+  }
+}
+
+function renderSettingsCategories() {
+  const listContainer = document.getElementById('settings-categories-list');
+  if (!listContainer) return;
+  
+  listContainer.innerHTML = '';
+  
+  if (userCategories.length === 0) {
+    listContainer.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 10px; font-size: 13px;">No custom categories. Add one below!</div>';
+    return;
+  }
+  
+  userCategories.forEach(cat => {
+    const item = document.createElement('div');
+    item.style.display = 'flex';
+    item.style.alignItems = 'center';
+    item.style.justifyContent = 'space-between';
+    item.style.padding = '8px 12px';
+    item.style.borderRadius = '8px';
+    item.style.background = 'var(--bg-secondary)';
+    item.style.border = '1px solid var(--border-color)';
+    item.style.marginTop = '5px';
+    
+    item.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 14px; height: 14px; border-radius: 50%; background-color: ${cat.color};"></div>
+        <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">${cat.name}</span>
+      </div>
+      <button class="action-btn delete-category-btn" data-id="${cat.id}" style="color: var(--danger); border: none; background: transparent; cursor: pointer; padding: 4px;" title="Delete category">
+        <i class="fa-regular fa-trash-can"></i>
+      </button>
+    `;
+    listContainer.appendChild(item);
+  });
+  
+  // Bind delete listener
+  listContainer.querySelectorAll('.delete-category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const catId = btn.getAttribute('data-id');
+      deleteCategory(catId);
+    });
+  });
+}
+
+function deleteCategory(catId) {
+  if (confirm("Are you sure you want to delete this category? Any transactions associated with this category will be displayed as 'Other'.")) {
+    userCategories = userCategories.filter(cat => cat.id !== catId);
+    safeStorage.setItem(`office_categories_${currentUser.id}`, JSON.stringify(userCategories));
+    
+    // Refresh category mappings and dropdowns
+    loadCategories();
+    renderSettingsCategories();
+    renderAll();
   }
 }
 
