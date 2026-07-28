@@ -371,6 +371,34 @@ function init() {
 // 4. Tab Navigation Logic
 function setupNavigation() {
   const menuItems = document.querySelectorAll('.sidebar-menu .menu-item');
+  const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+  const sidebar = document.querySelector('.sidebar');
+  
+  if (mobileMenuToggle && sidebar) {
+    mobileMenuToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.toggle('open');
+    });
+    
+    document.addEventListener('click', (e) => {
+      if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== mobileMenuToggle) {
+        sidebar.classList.remove('open');
+      }
+    });
+    
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    if (mobileMenuClose) {
+      mobileMenuClose.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+      });
+    }
+    
+    menuItems.forEach(item => {
+      item.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+      });
+    });
+  }
   
   menuItems.forEach(item => {
     item.addEventListener('click', (e) => {

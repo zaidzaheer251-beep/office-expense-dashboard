@@ -1041,32 +1041,51 @@ body {
 /* Responsive */
 @media (max-width: 768px) {
   .app-container {
-    flex-direction: column !important; /* Stack header and layout container vertically */
+    flex-direction: column !important;
     height: 100vh;
     overflow: hidden;
     width: 100vw;
   }
   
+  /* Make hamburger button visible */
+  .mobile-toggle-btn {
+    display: block !important;
+  }
+  
+  /* Slide-in sidebar drawer styling */
   .sidebar {
-    width: 100% !important; /* Header takes full width */
-    height: 60px !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    border-right: none !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    padding: 10px 16px !important;
-    background-color: var(--bg-sidebar);
-    flex-shrink: 0 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: -280px !important; /* Hide off-screen by default */
+    width: 280px !important;
+    height: 100vh !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
+    background-color: var(--bg-sidebar) !important;
+    border-right: 1px solid var(--border-color) !important;
+    border-bottom: none !important;
+    z-index: 2000 !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    padding: 24px !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25) !important;
+    display: flex !important;
+  }
+  
+  .sidebar.open {
+    left: 0 !important; /* Slide in when open class is toggled */
   }
   
   .sidebar-header {
-    margin-bottom: 0 !important;
+    margin-bottom: 24px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
   }
   
   .sidebar-logo {
     margin-bottom: 0 !important;
-    font-size: 16px !important;
+    font-size: 18px !important;
     display: flex !important;
     align-items: center !important;
     gap: 8px !important;
@@ -1079,67 +1098,81 @@ body {
   }
 
   .sidebar-menu {
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    height: 60px !important;
-    background-color: var(--bg-sidebar);
+    position: static !important;
+    height: auto !important;
     display: flex !important;
-    flex-direction: row !important; /* Horizontal row */
-    justify-content: space-around !important;
-    align-items: center !important;
-    z-index: 1000 !important;
-    padding: 0 5px !important;
-    border-top: 1px solid var(--border-color) !important;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15) !important;
+    flex-direction: column !important; /* Back to a neat vertical list! */
+    gap: 8px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-top: none !important;
     margin: 0 !important;
     list-style: none;
+    overflow-y: auto !important;
+    max-height: calc(100vh - 280px) !important; /* Scroll if list gets too long */
   }
   
   .sidebar-menu .menu-item {
-    width: 44px !important;
-    height: 44px !important;
-    padding: 0 !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    border-radius: var(--radius-md) !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
     margin: 0 !important;
+    padding: 0 !important;
   }
   
   .sidebar-menu .menu-item a {
-    font-size: 0 !important; /* Hide text label on mobile */
+    font-size: 14px !important; /* Show text labels on drawer! */
     display: flex !important;
-    justify-content: center !important;
     align-items: center !important;
+    gap: 12px !important;
+    padding: 10px 16px !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--text-secondary) !important;
     width: 100% !important;
-    height: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    color: inherit !important;
+    height: auto !important;
+    justify-content: flex-start !important;
+  }
+  
+  .sidebar-menu .menu-item.active a {
+    background: var(--primary-color) !important;
+    color: #ffffff !important;
   }
   
   .sidebar-menu .menu-item a i {
-    font-size: 20px !important; /* Touch friendly larger icons */
+    font-size: 16px !important;
     margin: 0 !important;
+    width: 20px !important;
+    text-align: center !important;
   }
   
   .menu-label {
-    display: none !important; /* Hide labels */
+    display: block !important; /* Show section headers inside drawer */
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: var(--text-secondary) !important;
+    margin: 16px 0 8px 12px !important;
+    font-weight: 700 !important;
   }
   
   .sidebar-limit-alert {
-    display: none !important; /* Hide limit card in sidebar */
+    display: none !important;
   }
   
   .sidebar-footer {
-    display: none !important; /* Hide monthly limit alert and edit button in sidebar on mobile */
+    display: block !important; /* Show the alert card inside the drawer */
+    margin-top: auto !important;
+    border-top: 1px solid var(--border-color) !important;
+    padding-top: 16px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    position: static !important;
   }
   
   .main-layout-container {
-    height: calc(100vh - 120px) !important; /* 60px header + 60px bottom nav */
-    width: 100vw !important; /* Take full width of viewport */
+    height: 100vh !important; /* Back to full viewport height since bottom nav is gone! */
+    width: 100vw !important;
     overflow-y: auto !important;
   }
   

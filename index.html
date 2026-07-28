@@ -66,7 +66,7 @@
   <script src="html2pdf.js"></script>
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=2.8">
+  <link rel="stylesheet" href="style.css?v=2.9">
 </head>
 <body>
   
@@ -131,9 +131,14 @@
     
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-dot"></div>
-        <span>Approx Expense</span>
+      <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <div class="sidebar-logo" style="display: flex; align-items: center; gap: 8px;">
+          <div class="logo-dot" style="margin: 0;"></div>
+          <span>Approx Expense</span>
+        </div>
+        <button class="mobile-close-btn" id="mobile-menu-close" style="display: none; background: transparent; border: none; font-size: 18px; color: var(--text-secondary); cursor: pointer; padding: 4px;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
       
       <ul class="sidebar-menu">
@@ -178,9 +183,14 @@
       
       <!-- Shared Header -->
       <header class="header">
-        <div class="header-left">
-          <h1 id="page-title">Dashboard</h1>
-          <p id="page-subtitle">Welcome back! Here's your office expenses summary.</p>
+        <div class="header-left" style="display: flex; align-items: center; gap: 12px;">
+          <button class="mobile-toggle-btn" id="mobile-menu-toggle" title="Open Menu" style="display: none; background: transparent; border: none; font-size: 20px; color: var(--text-primary); cursor: pointer; padding: 6px; border-radius: var(--radius-sm);">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div>
+            <h1 id="page-title" style="margin: 0;">Dashboard</h1>
+            <p id="page-subtitle" style="margin: 0;">Welcome back! Here's your office expenses summary.</p>
+          </div>
         </div>
         
         <div class="header-right">
@@ -818,6 +828,6 @@
   </div>
 
   <!-- JS Logic -->
-  <script src="app.js?v=2.8"></script>
+  <script src="app.js?v=2.9"></script>
 </body>
 </html>
