@@ -1221,21 +1221,6 @@ body {
   .metrics-grid {
     grid-template-columns: 1fr !important; /* Stack metrics vertically on very small mobile screens */
   }
-  .sidebar {
-    width: 60px !important; /* Slightly narrower sidebar on tiny mobile screens */
-    padding: 20px 5px !important;
-  }
-  .sidebar-menu .menu-item {
-    width: 38px !important;
-    height: 38px !important;
-    border-radius: var(--radius-sm) !important;
-  }
-  .sidebar-menu .menu-item i {
-    font-size: 16px !important;
-  }
-  .main-layout-container {
-    width: calc(100vw - 60px) !important;
-  }
   .auth-card {
     padding: 24px !important;
   }
