@@ -509,7 +509,7 @@ function setupAuthListeners() {
               emailRedirectTo: window.location.origin + window.location.pathname,
               data: {
                 username: username || email.split('@')[0],
-                role: 'employee'
+                role: 'personal'
               }
             }
           });
@@ -611,19 +611,24 @@ async function handleAuthState(session) {
 
           currentProfile = profile || {
             username: currentUser.user_metadata?.username || currentUser.email.split('@')[0],
-            role: currentUser.user_metadata?.role || 'employee'
+            role: currentUser.user_metadata?.role || 'personal'
           };
         } catch (e) {
           console.error("Profile load error:", e.message);
           currentProfile = {
             username: currentUser.email.split('@')[0],
-            role: 'employee'
+            role: 'personal'
           };
         }
       }
 
       if (userDisplayName) userDisplayName.textContent = currentProfile.username;
-      if (userDisplayRole) userDisplayRole.textContent = currentProfile.role.toUpperCase();
+      if (userDisplayRole) {
+        const displayRole = currentProfile.role === 'personal' || currentProfile.role === 'employee'
+          ? 'Personal' 
+          : currentProfile.role.toUpperCase();
+        userDisplayRole.textContent = displayRole;
+      }
 
       // Toggle views
       if (authContainer) authContainer.classList.add('hidden');
