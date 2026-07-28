@@ -313,6 +313,7 @@ function init() {
     currencySelect.addEventListener('change', (e) => {
       currentCurrency = e.target.value;
       safeStorage.setItem('office_currency', currentCurrency);
+      updateMonthlyLimitFromCurrency();
       updateInputLabels();
       renderAll();
     });
@@ -706,6 +707,8 @@ async function handleAuthState(session) {
 
       // Load custom categories for this user!
       loadCategories();
+      // Load custom limits for the currency!
+      updateMonthlyLimitFromCurrency();
 
       if (userDisplayName) userDisplayName.textContent = currentProfile.username;
       if (userDisplayRole) {
@@ -950,6 +953,25 @@ function fromBaseCurrency(valPKR) {
 function toBaseCurrency(valCurrent) {
   const rate = EXCHANGE_RATES[currentCurrency] || 1;
   return valCurrent * rate;
+}
+
+const DEFAULT_LIMITS = {
+  PKR: 28000,
+  USD: 100,
+  GBP: 80
+};
+
+function updateMonthlyLimitFromCurrency() {
+  const userId = currentUser ? currentUser.id : 'default';
+  const key = `office_limit_${currentCurrency}_${userId}`;
+  let savedLimit = safeStorage.getItem(key);
+  
+  if (!savedLimit) {
+    savedLimit = DEFAULT_LIMITS[currentCurrency] || 100;
+    safeStorage.setItem(key, savedLimit.toString());
+  }
+  
+  monthlyLimit = toBaseCurrency(parseFloat(savedLimit));
 }
 
 function formatCurrency(valPKR) {
@@ -2235,16 +2257,23 @@ async function handleAddExpense(e) {
 
 function handleEditLimit(e) {
   e.preventDefault();
-  const currentLimitConverted = fromBaseCurrency(monthlyLimit).toFixed(0);
+  const userId = currentUser ? currentUser.id : 'default';
+  const key = `office_limit_${currentCurrency}_${userId}`;
+  let currentLimitVal = parseFloat(safeStorage.getItem(key)) || DEFAULT_LIMITS[currentCurrency] || 100;
+  
   const symbol = currentCurrency === 'USD' ? '$' : currentCurrency === 'GBP' ? '£' : 'PKR';
-  const newLimit = prompt(`Enter new budget limit (current: ${symbol} ${currentLimitConverted}):`, currentLimitConverted);
+  const newLimit = prompt(`Enter new budget limit in ${currentCurrency} (${symbol}):`, currentLimitVal);
   if (newLimit === null) return;
   
   const val = parseFloat(newLimit);
   if (isNaN(val) || val <= 0) return;
   
+  // Save the manual limit in the active currency
+  safeStorage.setItem(key, val.toString());
+  
+  // Update global monthlyLimit (converted to PKR base)
   monthlyLimit = toBaseCurrency(val);
-  safeStorage.setItem('office_monthly_limit', monthlyLimit.toString());
+  
   renderAll();
 }
 
