@@ -131,7 +131,8 @@ const TAB_DESCRIPTIONS = {
   "cards-view": { title: "Office Cards", sub: "Monitor debit card spending and card limits." },
   "chat-view": { title: "Team Chat", sub: "Communicate with managers regarding office expenses." },
   "reports-view": { title: "Analytics & Reports", sub: "Detailed graphs and key insights of your spending." },
-  "calendar-view": { title: "Calendar View", sub: "Track dates of office expenses visually." }
+  "calendar-view": { title: "Calendar View", sub: "Track dates of office expenses visually." },
+  "settings-view": { title: "Account Settings", sub: "Update your profile details, avatar, and security." }
 };
 
 // UI Elements (declared globally, populated on DOMContentLoaded)
@@ -216,6 +217,7 @@ function init() {
   setupTheme();
   setupNavigation();
   setupAuthListeners();
+  setupSettingsListeners();
   
   // Set default dates
   const todayString = new Date().toISOString().substring(0, 10);
@@ -622,15 +624,17 @@ async function handleAuthState(session) {
             .eq('id', currentUser.id)
             .single();
 
-          currentProfile = profile || {
-            username: currentUser.user_metadata?.username || currentUser.email.split('@')[0],
-            role: currentUser.user_metadata?.role || 'employee'
+          currentProfile = {
+            username: profile?.username || currentUser.user_metadata?.username || currentUser.email.split('@')[0],
+            role: profile?.role || currentUser.user_metadata?.role || 'employee',
+            avatar_url: currentUser.user_metadata?.avatar_url || ''
           };
         } catch (e) {
           console.error("Profile load error:", e.message);
           currentProfile = {
             username: currentUser.email.split('@')[0],
-            role: 'employee'
+            role: 'employee',
+            avatar_url: currentUser.user_metadata?.avatar_url || ''
           };
         }
       }
@@ -642,6 +646,9 @@ async function handleAuthState(session) {
           : currentProfile.role.toUpperCase();
         userDisplayRole.textContent = displayRole;
       }
+      
+      // Update profile images dynamically
+      updateAvatarDisplay(currentProfile.avatar_url);
 
       // Toggle views
       if (authContainer) authContainer.classList.add('hidden');
@@ -1767,7 +1774,230 @@ function changeMonth(direction) {
   renderCalendar();
 }
 
-// 14. Action Handlers
+// 14. Settings View Actions & Avatar Management
+function setupSettingsListeners() {
+  const settingsUsername = document.getElementById('settings-username');
+  const settingsAvatarUrl = document.getElementById('settings-avatar-url');
+  const settingsAvatarFile = document.getElementById('settings-avatar-file');
+  const settingsAvatarPreview = document.getElementById('settings-avatar-preview');
+  
+  const settingsProfileForm = document.getElementById('settings-profile-form');
+  const settingsAvatarForm = document.getElementById('settings-avatar-form');
+  const settingsPasswordForm = document.getElementById('settings-password-form');
+
+  // Trigger loading values when settings tab is viewed
+  const settingsMenuItem = document.querySelector('.sidebar-menu .menu-item[data-tab="settings-view"]');
+  if (settingsMenuItem) {
+    settingsMenuItem.addEventListener('click', () => {
+      if (settingsUsername) settingsUsername.value = currentProfile.username;
+      if (settingsAvatarUrl) settingsAvatarUrl.value = currentProfile.avatar_url || '';
+      if (settingsAvatarPreview) {
+        settingsAvatarPreview.src = currentProfile.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop';
+      }
+    });
+  }
+
+  // Preview local image upload instantly
+  if (settingsAvatarFile && settingsAvatarPreview) {
+    settingsAvatarFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const maxDimension = 150; // Keep avatar compact
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > height) {
+              if (width > maxDimension) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              }
+            } else {
+              if (height > maxDimension) {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Get compressed Base64 string
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            settingsAvatarPreview.src = compressedBase64;
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  // Update Profile Details (Username)
+  if (settingsProfileForm) {
+    settingsProfileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('settings-profile-submit-btn');
+      const newUsername = settingsUsername.value.trim();
+      if (!newUsername) return;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+      }
+
+      try {
+        if (isDemoMode) {
+          currentProfile.username = newUsername;
+          if (userDisplayName) userDisplayName.textContent = newUsername;
+          alert("Profile updated successfully (Offline Mode)!");
+        } else {
+          // 1. Update Supabase Auth user metadata
+          const { error: authErr } = await supabase.auth.updateUser({
+            data: { username: newUsername }
+          });
+          if (authErr) throw authErr;
+
+          // 2. Update profiles table
+          const { error: dbErr } = await supabase
+            .from('profiles')
+            .update({ username: newUsername })
+            .eq('id', currentUser.id);
+          if (dbErr) throw dbErr;
+
+          currentProfile.username = newUsername;
+          if (userDisplayName) userDisplayName.textContent = newUsername;
+          alert("Profile details updated successfully!");
+        }
+      } catch (err) {
+        alert("Failed to update profile: " + err.message);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
+        }
+      }
+    });
+  }
+
+  // Update Profile Photo (Avatar)
+  if (settingsAvatarForm) {
+    settingsAvatarForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('settings-avatar-submit-btn');
+      let finalAvatarUrl = settingsAvatarUrl.value.trim();
+
+      // Check if file upload has a preview base64 string
+      if (settingsAvatarPreview && settingsAvatarPreview.src.startsWith('data:image/')) {
+        finalAvatarUrl = settingsAvatarPreview.src;
+      }
+
+      if (!finalAvatarUrl) {
+        alert("Please paste a URL or upload a file first.");
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+      }
+
+      try {
+        if (isDemoMode) {
+          currentProfile.avatar_url = finalAvatarUrl;
+          updateAvatarDisplay(finalAvatarUrl);
+          alert("Profile picture updated (Offline Mode)!");
+        } else {
+          // Update Supabase Auth user metadata
+          const { error: authErr } = await supabase.auth.updateUser({
+            data: { avatar_url: finalAvatarUrl }
+          });
+          if (authErr) throw authErr;
+
+          currentProfile.avatar_url = finalAvatarUrl;
+          updateAvatarDisplay(finalAvatarUrl);
+          alert("Profile picture updated successfully!");
+        }
+      } catch (err) {
+        alert("Failed to update profile picture: " + err.message);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-image"></i> Update Photo';
+        }
+      }
+    });
+  }
+
+  // Change Password
+  if (settingsPasswordForm) {
+    settingsPasswordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('settings-password-submit-btn');
+      const newPasswordInput = document.getElementById('settings-new-password');
+      const confirmPasswordInput = document.getElementById('settings-confirm-password');
+
+      const newPass = newPasswordInput.value;
+      const confPass = confirmPasswordInput.value;
+
+      if (newPass.length < 6) {
+        alert("Password must be at least 6 characters long.");
+        return;
+      }
+
+      if (newPass !== confPass) {
+        alert("Passwords do not match.");
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
+      }
+
+      try {
+        if (isDemoMode) {
+          alert("Password change simulated successfully (Offline Mode)!");
+        } else {
+          const { error } = await supabase.auth.updateUser({ password: newPass });
+          if (error) throw error;
+          alert("Password updated successfully!");
+        }
+        newPasswordInput.value = '';
+        confirmPasswordInput.value = '';
+      } catch (err) {
+        alert("Failed to update password: " + err.message);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fa-solid fa-key"></i> Update Password';
+        }
+      }
+    });
+  }
+}
+
+function updateAvatarDisplay(url) {
+  const defaultUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop';
+  const imgUrl = url || defaultUrl;
+  
+  document.querySelectorAll('.profile-img').forEach(img => {
+    img.src = imgUrl;
+  });
+  
+  const settingsAvatarPreview = document.getElementById('settings-avatar-preview');
+  if (settingsAvatarPreview) {
+    settingsAvatarPreview.src = imgUrl;
+  }
+}
+
+// 15. Action Handlers
 async function handleAddExpense(e) {
   e.preventDefault();
   

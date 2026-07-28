@@ -66,7 +66,7 @@
   <script src="html2pdf.js"></script>
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=2.4">
+  <link rel="stylesheet" href="style.css?v=2.5">
 </head>
 <body>
   
@@ -160,6 +160,9 @@
         </li>
         <li class="menu-item" data-tab="calendar-view">
           <a href="#"><i class="fa-solid fa-calendar-days"></i> Calendar</a>
+        </li>
+        <li class="menu-item" data-tab="settings-view">
+          <a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
         </li>
       </ul>
       
@@ -715,11 +718,80 @@
         </section>
       </main>
 
+      <!-- TAB 8: SETTINGS VIEW -->
+      <main class="main-content tab-view" id="settings-view">
+        <section class="settings-page-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1000px; margin: 0 auto;">
+          
+          <!-- Left side: Personal Details & Avatar -->
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            <!-- Profile Details Card -->
+            <div class="card-widget">
+              <div class="card-header">
+                <h3>Personal Details</h3>
+              </div>
+              <form id="settings-profile-form" style="display: flex; flex-direction: column; gap: 16px; margin-top: 15px;">
+                <div class="form-group">
+                  <label for="settings-username">Display Name / Username</label>
+                  <input type="text" id="settings-username" class="form-control" placeholder="Enter your name" required>
+                </div>
+                <button type="submit" class="btn-submit" id="settings-profile-submit-btn"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+              </form>
+            </div>
+
+            <!-- Profile Picture Card -->
+            <div class="card-widget">
+              <div class="card-header">
+                <h3>Profile Picture</h3>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; margin-top: 20px;">
+                <div style="position: relative;">
+                  <img id="settings-avatar-preview" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop" alt="Profile Preview" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);">
+                </div>
+                
+                <form id="settings-avatar-form" style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                  <div class="form-group">
+                    <label for="settings-avatar-file">Upload Image</label>
+                    <input type="file" id="settings-avatar-file" class="form-control" accept="image/*" style="padding: 8px;">
+                  </div>
+                  <div style="text-align: center; color: var(--text-secondary); font-size: 12px; font-weight: 600;">— OR —</div>
+                  <div class="form-group">
+                    <label for="settings-avatar-url">Image URL</label>
+                    <input type="text" id="settings-avatar-url" class="form-control" placeholder="Paste web image link...">
+                  </div>
+                  <button type="submit" class="btn-submit" id="settings-avatar-submit-btn"><i class="fa-solid fa-image"></i> Update Photo</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side: Change Password -->
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            <div class="card-widget">
+              <div class="card-header">
+                <h3>Change Password</h3>
+              </div>
+              <form id="settings-password-form" style="display: flex; flex-direction: column; gap: 16px; margin-top: 15px;">
+                <div class="form-group">
+                  <label for="settings-new-password">New Password</label>
+                  <input type="password" id="settings-new-password" class="form-control" placeholder="Enter new password (min 6 chars)" required>
+                </div>
+                <div class="form-group">
+                  <label for="settings-confirm-password">Confirm Password</label>
+                  <input type="password" id="settings-confirm-password" class="form-control" placeholder="Confirm new password" required>
+                </div>
+                <button type="submit" class="btn-submit" id="settings-password-submit-btn"><i class="fa-solid fa-key"></i> Update Password</button>
+              </form>
+            </div>
+          </div>
+
+        </section>
+      </main>
+
     </div>
     
   </div>
 
   <!-- JS Logic -->
-  <script src="app.js?v=2.4"></script>
+  <script src="app.js?v=2.5"></script>
 </body>
 </html>

@@ -1295,3 +1295,11 @@ body {
 .hidden {
   display: none !important;
 }
+
+/* Settings Page Responsiveness */
+@media (max-width: 768px) {
+  .settings-page-container {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
