@@ -239,6 +239,19 @@ function init() {
   if (editLimitBtn) editLimitBtn.addEventListener('click', handleEditLimit);
   const editLimitBtnDash = document.getElementById('edit-limit-btn-dash');
   if (editLimitBtnDash) editLimitBtnDash.addEventListener('click', handleEditLimit);
+  // Set up currency selector
+  updateInputLabels();
+  const currencySelect = document.getElementById('currency-select');
+  if (currencySelect) {
+    currencySelect.value = currentCurrency;
+    currencySelect.addEventListener('change', (e) => {
+      currentCurrency = e.target.value;
+      safeStorage.setItem('office_currency', currentCurrency);
+      updateInputLabels();
+      renderAll();
+    });
+  }
+
   themeToggleBtn.addEventListener('click', toggleTheme);
   
   // Listeners: Reports Export
@@ -843,12 +856,66 @@ function calculateTotals() {
   };
 }
 
-// Formatting
+// Global currency state
+let currentCurrency = safeStorage.getItem('office_currency') || 'PKR';
+
+const EXCHANGE_RATES = {
+  PKR: 1,
+  USD: 280,
+  GBP: 360
+};
+
+// Convert value from PKR (base) to current selected currency
+function fromBaseCurrency(valPKR) {
+  const rate = EXCHANGE_RATES[currentCurrency] || 1;
+  return valPKR / rate;
+}
+
+// Convert value from current selected currency to PKR (base)
+function toBaseCurrency(valCurrent) {
+  const rate = EXCHANGE_RATES[currentCurrency] || 1;
+  return valCurrent * rate;
+}
+
+function formatCurrency(valPKR) {
+  const converted = fromBaseCurrency(valPKR);
+  
+  if (currentCurrency === 'USD') {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(converted);
+  } else if (currentCurrency === 'GBP') {
+    return new Intl.NumberFormat('en-GB', {
+      style: 'currency',
+      currency: 'GBP',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(converted);
+  } else {
+    // Default PKR
+    return new Intl.NumberFormat('en-PK', {
+      style: 'currency',
+      currency: 'PKR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(converted);
+  }
+}
+
 function formatPKR(val) {
-  return new Intl.NumberFormat('en-PK', {
-    style: 'currency',
-    currency: 'PKR', minimumFractionDigits: 0, maximumFractionDigits: 0
-  }).format(val);
+  return formatCurrency(val);
+}
+
+function updateInputLabels() {
+  const expenseAmountLabel = document.querySelector('label[for="expense-amount"]');
+  const fundingAmountLabel = document.querySelector('label[for="funding-amount"]');
+  const symbol = currentCurrency === 'USD' ? '$' : currentCurrency === 'GBP' ? '£' : 'PKR';
+  
+  if (expenseAmountLabel) expenseAmountLabel.textContent = `Amount (${symbol})`;
+  if (fundingAmountLabel) fundingAmountLabel.textContent = `Amount (${symbol})`;
 }
 
 // Render All Components
@@ -1187,7 +1254,7 @@ async function handleAddFunding(e) {
       id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
       source,
       date,
-      amount,
+      amount: toBaseCurrency(amount),
       user_id: currentUser.id,
       created_at: new Date().toISOString()
     };
@@ -1206,7 +1273,7 @@ async function handleAddFunding(e) {
       .insert({
         source,
         date,
-        amount,
+        amount: toBaseCurrency(amount),
         user_id: currentUser.id
       });
       
@@ -1733,7 +1800,7 @@ async function handleAddExpense(e) {
       date,
       item,
       category,
-      amount,
+      amount: toBaseCurrency(amount),
       user_id: currentUser.id,
       created_at: new Date().toISOString()
     };
@@ -1754,7 +1821,7 @@ async function handleAddExpense(e) {
         date,
         item,
         category,
-        amount,
+        amount: toBaseCurrency(amount),
         user_id: currentUser.id
       });
       
@@ -1772,13 +1839,15 @@ async function handleAddExpense(e) {
 
 function handleEditLimit(e) {
   e.preventDefault();
-  const newLimit = prompt(`Enter new budget limit (current: ${monthlyLimit} PKR):`, monthlyLimit);
+  const currentLimitConverted = fromBaseCurrency(monthlyLimit).toFixed(0);
+  const symbol = currentCurrency === 'USD' ? '$' : currentCurrency === 'GBP' ? '£' : 'PKR';
+  const newLimit = prompt(`Enter new budget limit (current: ${symbol} ${currentLimitConverted}):`, currentLimitConverted);
   if (newLimit === null) return;
   
   const val = parseFloat(newLimit);
   if (isNaN(val) || val <= 0) return;
   
-  monthlyLimit = val;
+  monthlyLimit = toBaseCurrency(val);
   safeStorage.setItem('office_monthly_limit', monthlyLimit.toString());
   renderAll();
 }
