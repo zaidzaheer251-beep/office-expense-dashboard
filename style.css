@@ -1215,6 +1215,106 @@ body {
   .dashboard-grid-bottom {
     grid-template-columns: 1fr !important;
   }
+  
+  /* Mobile Table Card Layout Overhaul */
+  .transaction-table {
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  .transaction-table thead {
+    display: none !important; /* Hide column headers on mobile */
+  }
+  
+  .transaction-table tbody {
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  .transaction-table tr {
+    display: flex !important;
+    flex-direction: column !important; /* Stack elements vertically */
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 14px 16px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01) !important;
+    position: relative !important;
+  }
+  
+  /* Dashboard recent transactions formatting */
+  #transaction-rows td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 8px 0 !important;
+    border-bottom: 1px dashed var(--border-color) !important;
+    width: 100% !important;
+  }
+  #transaction-rows td:nth-child(1) {
+    display: block !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 6px !important;
+  }
+  #transaction-rows td:nth-child(2)::before { content: "Category"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+  #transaction-rows td:nth-child(3)::before { content: "Date"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+  #transaction-rows td:nth-child(4)::before { content: "Amount"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+  #transaction-rows td:nth-child(5) {
+    justify-content: flex-end !important;
+    border-bottom: none !important;
+    padding-top: 10px !important;
+  }
+  
+  /* Funding history table formatting */
+  #payment-rows td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 8px 0 !important;
+    border-bottom: 1px dashed var(--border-color) !important;
+    width: 100% !important;
+  }
+  #payment-rows td:nth-child(1) {
+    display: block !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 6px !important;
+  }
+  #payment-rows td:nth-child(2)::before { content: "Date"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+  #payment-rows td:nth-child(3)::before { content: "Amount"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+  #payment-rows td:nth-child(4) {
+    justify-content: flex-end !important;
+    border-bottom: none !important;
+    padding-top: 10px !important;
+  }
+  
+  /* Detailed transaction logs table formatting */
+  #detailed-transaction-rows td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 8px 0 !important;
+    border-bottom: 1px dashed var(--border-color) !important;
+    width: 100% !important;
+  }
+  #detailed-transaction-rows td:nth-child(2) {
+    display: block !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 6px !important;
+    order: -1 !important; /* Push item name to the top of card */
+  }
+  #detailed-transaction-rows td:nth-child(1)::before { content: "Transaction ID"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+  #detailed-transaction-rows td:nth-child(3)::before { content: "Category"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+  #detailed-transaction-rows td:nth-child(4)::before { content: "Date"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+  #detailed-transaction-rows td:nth-child(5)::before { content: "Amount"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
+  #detailed-transaction-rows td:nth-child(6) {
+    justify-content: flex-end !important;
+    border-bottom: none !important;
+    padding-top: 10px !important;
+  }
 }
 
 @media (max-width: 480px) {
