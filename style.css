@@ -754,6 +754,9 @@ body {
   .transactions-page-layout {
     flex-direction: column;
   }
+  .transactions-page-layout .card-widget {
+    width: 100% !important; /* Force full width on mobile/tablet to align margins */
+  }
 }
 
 /* Cards View Layout */
@@ -1242,6 +1245,20 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01) !important;
     position: relative !important;
   }
+  
+  /* Reset layout for empty placeholder rows (colspan cells) on mobile */
+  .transaction-table td[colspan] {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    border-bottom: none !important;
+    padding: 30px 10px !important;
+  }
+  .transaction-table td[colspan]::before {
+    display: none !important; /* Hide injected 'Transaction ID' or other labels */
+  }
+  
   
   /* Dashboard recent transactions formatting */
   #transaction-rows td {
