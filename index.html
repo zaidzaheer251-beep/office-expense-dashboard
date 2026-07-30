@@ -66,7 +66,7 @@
   <script src="html2pdf.js"></script>
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=3.3">
+  <link rel="stylesheet" href="style.css?v=3.4">
 </head>
 <body>
   
@@ -152,11 +152,8 @@
         <li class="menu-item" data-tab="transactions-view">
           <a href="#"><i class="fa-solid fa-list-check"></i> Transactions</a>
         </li>
-        <li class="menu-item" data-tab="cards-view">
-          <a href="#"><i class="fa-solid fa-wallet"></i> Cards</a>
-        </li>
-        <li class="menu-item" data-tab="chat-view">
-          <a href="#"><i class="fa-solid fa-comment-dots"></i> Chat</a>
+        <li class="menu-item" data-tab="support-view">
+          <a href="#"><i class="fa-solid fa-headset"></i> Live Support</a>
         </li>
         
         <li class="menu-label">Analytics</li>
@@ -538,110 +535,18 @@
         </section>
       </main>
 
-      <!-- TAB 4: CARDS VIEW -->
-      <main class="main-content tab-view" id="cards-view">
-        <section class="cards-view-grid">
-          <!-- Visual Cards -->
-          <div class="card-widget">
-            <div class="card-header">
-              <h3>Office Corporate Cards</h3>
-            </div>
-            
-            <div class="visual-cards-container">
-              <!-- Card 1 -->
-              <div class="credit-card-item primary-theme">
-                <div class="card-header-inner">
-                  <div class="card-chip"></div>
-                  <i class="fa-brands fa-cc-mastercard card-brand"></i>
-                </div>
-                <div class="card-number-lbl">**** **** **** 4892</div>
-                <div class="card-footer-inner">
-                  <div>
-                    <span class="card-sub-lbl">Card Holder</span>
-                    <span class="card-holder-val">Aamir Computer</span>
-                  </div>
-                  <div>
-                    <span class="card-sub-lbl">Expiry</span>
-                    <span class="card-holder-val">09/29</span>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Card 2 -->
-              <div class="credit-card-item pink-theme">
-                <div class="card-header-inner">
-                  <div class="card-chip"></div>
-                  <i class="fa-brands fa-cc-visa card-brand"></i>
-                </div>
-                <div class="card-number-lbl">**** **** **** 7312</div>
-                <div class="card-footer-inner">
-                  <div>
-                    <span class="card-sub-lbl">Card Holder</span>
-                    <span class="card-holder-val">Office Pantry</span>
-                  </div>
-                  <div>
-                    <span class="card-sub-lbl">Expiry</span>
-                    <span class="card-holder-val">12/28</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Card statistics -->
-          <div class="card-widget">
-            <div class="card-header">
-              <h3>Card Metrics</h3>
-            </div>
-            
-            <div class="category-list">
-              <div class="category-item">
-                <div class="category-info">
-                  <div class="category-color" style="background-color: #6366f1;"></div>
-                  <div>
-                    <div class="category-name">Primary Card Spend</div>
-                    <div style="font-size: 10px; color: var(--text-secondary);">Mastercard - 4892</div>
-                  </div>
-                </div>
-                <div class="category-val">Rs 3,240</div>
-              </div>
-              
-              <div class="category-item">
-                <div class="category-info">
-                  <div class="category-color" style="background-color: #ec4899;"></div>
-                  <div>
-                    <div class="category-name">Pantry Card Spend</div>
-                    <div style="font-size: 10px; color: var(--text-secondary);">Visa - 7312</div>
-                  </div>
-                </div>
-                <div class="category-val">Rs 2,350</div>
-              </div>
-              
-              <div class="category-item">
-                <div class="category-info">
-                  <div class="category-color" style="background-color: #10b981;"></div>
-                  <div>
-                    <div class="category-name">Total Card Limit</div>
-                    <div style="font-size: 10px; color: var(--text-secondary);">Monthly Card Cap</div>
-                  </div>
-                </div>
-                <div class="category-val">Rs 15,000</div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
 
-      <!-- TAB 5: CHAT VIEW -->
-      <main class="main-content tab-view" id="chat-view">
+
+      <!-- TAB 5: SUPPORT VIEW -->
+      <main class="main-content tab-view" id="support-view">
         <section class="chat-layout-wrapper">
           <div class="card-widget chat-card">
             <div class="card-header chat-header-border">
               <div class="profile-widget">
                 <div class="logo-dot" style="width: 10px; height: 10px; background: var(--success);"></div>
                 <div class="profile-info">
-                  <h5>Office Expense Group</h5>
-                  <p>3 Members online</p>
+                  <h5>Live Support Desk</h5>
+                  <p>Agent Online 🟢 (Typical response: 2 mins)</p>
                 </div>
               </div>
             </div>
@@ -653,7 +558,7 @@
             
             <!-- Chat input -->
             <form class="chat-input-form" id="chat-form">
-              <input type="text" id="chat-input" class="form-control" placeholder="Type a message about office expenses..." required>
+              <input type="text" id="chat-input" class="form-control" placeholder="Describe your issue or type a message to support..." required>
               <button type="submit" class="btn-submit" style="padding: 10px 20px;"><i class="fa-solid fa-paper-plane"></i></button>
             </form>
           </div>
@@ -828,6 +733,6 @@
   </div>
 
   <!-- JS Logic -->
-  <script src="app.js?v=3.3"></script>
+  <script src="app.js?v=3.4"></script>
 </body>
 </html>

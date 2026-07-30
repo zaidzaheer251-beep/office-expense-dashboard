@@ -192,8 +192,7 @@ const TAB_DESCRIPTIONS = {
   "dashboard-view": { title: "Dashboard", sub: "Welcome back! Here's your office expenses summary." },
   "payments-view": { title: "Received Funding", sub: "Track incoming funding and manage office deposits." },
   "transactions-view": { title: "Transactions", sub: "Search, filter, and export detailed office logs." },
-  "cards-view": { title: "Office Cards", sub: "Monitor debit card spending and card limits." },
-  "chat-view": { title: "Team Chat", sub: "Communicate with managers regarding office expenses." },
+  "support-view": { title: "Live Support Helpdesk", sub: "Get 24/7 assistance for your office expenses." },
   "reports-view": { title: "Analytics & Reports", sub: "Detailed graphs and key insights of your spending." },
   "calendar-view": { title: "Calendar View", sub: "Track dates of office expenses visually." },
   "settings-view": { title: "Account Settings", sub: "Update your profile details, avatar, and security." }
@@ -437,7 +436,7 @@ function setupNavigation() {
           renderDetailedTransactions();
         } else if (tabId === 'payments-view') {
           renderPaymentsTable();
-        } else if (tabId === 'chat-view') {
+        } else if (tabId === 'support-view') {
           renderChats();
           chatFeed.scrollTop = chatFeed.scrollHeight;
         } else if (tabId === 'reports-view') {
@@ -940,7 +939,7 @@ function subscribeChats() {
       renderChats();
       
       const activeTab = document.querySelector('.tab-view.active')?.id;
-      if (activeTab === 'chat-view') {
+      if (activeTab === 'support-view') {
         chatFeed.scrollTop = chatFeed.scrollHeight;
       }
     })
@@ -1729,7 +1728,6 @@ async function handleSendChat(e) {
     
     chatInput.value = '';
     
-    // Refresh chats locally
     chats.push({
       sender: newChat.sender_name,
       text: newChat.text,
@@ -1738,6 +1736,9 @@ async function handleSendChat(e) {
     });
     renderChats();
     chatFeed.scrollTop = chatFeed.scrollHeight;
+    
+    // Auto trigger support agent reply in demo mode
+    triggerSupportAutoReply();
     return;
   }
 
@@ -1751,9 +1752,56 @@ async function handleSendChat(e) {
       
     if (error) throw error;
     chatInput.value = '';
+    
+    // Auto trigger support agent reply in real mode
+    triggerSupportAutoReply();
   } catch (err) {
     alert("Error sending chat: " + err.message);
   }
+}
+
+function triggerSupportAutoReply() {
+  setTimeout(async () => {
+    try {
+      const supportReplies = [
+        "Assalamu Alaikum! Approx Live Support Helpdesk me khushamdeed. Apka issue register ho gaya hai, jald hi agent apse rabta karega.",
+        "Thank you for contacting support! An agent has been assigned to your ticket and will reply shortly.",
+        "Your office expense support request has been queued. Average wait time is currently 2 minutes.",
+        "Please provide the transaction ID or details if you are reporting a specific transaction issue."
+      ];
+      const randomReply = supportReplies[Math.floor(Math.random() * supportReplies.length)];
+      
+      if (isDemoMode) {
+        const rawChats = JSON.parse(safeStorage.getItem('demo_chats') || '[]');
+        const newReply = {
+          sender_name: 'Support Agent Az',
+          text: randomReply,
+          created_at: new Date().toISOString()
+        };
+        rawChats.push(newReply);
+        safeStorage.setItem('demo_chats', JSON.stringify(rawChats));
+        
+        chats.push({
+          sender: newReply.sender_name,
+          text: newReply.text,
+          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          type: 'incoming'
+        });
+        renderChats();
+        if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+        return;
+      }
+      
+      await supabase
+        .from('chats')
+        .insert({
+          sender_name: 'Support Agent Az',
+          text: randomReply
+        });
+    } catch (e) {
+      console.error("Support bot auto reply error:", e);
+    }
+  }, 2000);
 }
 
 // 12. Reports View logic
