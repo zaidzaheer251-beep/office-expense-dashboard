@@ -811,10 +811,10 @@ async function checkAndSeedDatabase() {
 
       // Seed mock chat messages
       const chatsToSeed = [
-        { sender_name: 'Manager', text: 'Salam, Aamir. Is mahine ke pantry aur tea logs review kar ke dashboard par dalen.' },
-        { sender_name: 'Aamir Computer', text: 'Walaikum Assalam, sure sir. Main ne 07-07 se le kar 25-07 tak ke tamam expenses updates kar diye hain.' },
-        { sender_name: 'Aamir Computer', text: 'Naye plates ka bill Rs 1,120 bhi register kiya hai pantry card se.' },
-        { sender_name: 'Manager', text: 'Boht khoob! Total limit cross na ho, dhyaan rakhiyega. Good job.' }
+        { sender_name: 'Support Agent Az', text: 'Hello! Welcome to Approx Live Support Helpdesk. How can I assist you with your office expenses today?' },
+        { sender_name: 'User', text: 'Hi, I had a question about setting currency-specific limits.' },
+        { sender_name: 'Support Agent Az', text: 'Sure! You can switch currencies in the header and then click "Edit Limit" on the bottom left. Each currency budget is saved independently.' },
+        { sender_name: 'User', text: 'Great, that works perfectly. Thank you!' }
       ];
       await supabase.from('chats').insert(chatsToSeed);
     }
@@ -849,10 +849,10 @@ async function loadDatabaseData() {
     let storedChats = safeStorage.getItem('demo_chats');
     if (!storedChats) {
       const chatsToSeed = [
-        { sender_name: 'Manager', text: 'Salam, Aamir. Is mahine ke pantry aur tea logs review kar ke dashboard par dalen.' },
-        { sender_name: 'Aamir Computer', text: 'Walaikum Assalam, sure sir. Main ne 07-07 se le kar 25-07 tak ke tamam expenses updates kar diye hain.' },
-        { sender_name: 'Aamir Computer', text: 'Naye plates ka bill Rs 1,120 bhi register kiya hai pantry card se.' },
-        { sender_name: 'Manager', text: 'Boht khoob! Total limit cross na ho, dhyaan rakhiyega. Good job.' }
+        { sender_name: 'Support Agent Az', text: 'Hello! Welcome to Approx Live Support Helpdesk. How can I assist you with your office expenses today?' },
+        { sender_name: 'User', text: 'Hi, I had a question about setting currency-specific limits.' },
+        { sender_name: 'Support Agent Az', text: 'Sure! You can switch currencies in the header and then click "Edit Limit" on the bottom left. Each currency budget is saved independently.' },
+        { sender_name: 'User', text: 'Great, that works perfectly. Thank you!' }
       ];
       storedChats = JSON.stringify(chatsToSeed);
       safeStorage.setItem('demo_chats', storedChats);
@@ -1764,7 +1764,7 @@ function triggerSupportAutoReply() {
   setTimeout(async () => {
     try {
       const supportReplies = [
-        "Assalamu Alaikum! Approx Live Support Helpdesk me khushamdeed. Apka issue register ho gaya hai, jald hi agent apse rabta karega.",
+        "Hi! Welcome to Approx Live Support Helpdesk. Your support ticket has been opened and we will assist you shortly.",
         "Thank you for contacting support! An agent has been assigned to your ticket and will reply shortly.",
         "Your office expense support request has been queued. Average wait time is currently 2 minutes.",
         "Please provide the transaction ID or details if you are reporting a specific transaction issue."
