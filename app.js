@@ -846,7 +846,7 @@ async function loadDatabaseData() {
       ...f
     }));
 
-    let storedChats = safeStorage.getItem('demo_chats');
+    let storedChats = safeStorage.getItem('demo_chats_v2');
     if (!storedChats) {
       const chatsToSeed = [
         { sender_name: 'Support Agent Az', text: 'Hello! Welcome to Approx Live Support Helpdesk. How can I assist you with your office expenses today?' },
@@ -855,7 +855,7 @@ async function loadDatabaseData() {
         { sender_name: 'User', text: 'Great, that works perfectly. Thank you!' }
       ];
       storedChats = JSON.stringify(chatsToSeed);
-      safeStorage.setItem('demo_chats', storedChats);
+      safeStorage.setItem('demo_chats_v2', storedChats);
     }
     const parsedChats = JSON.parse(storedChats);
     chats = parsedChats.map(msg => ({
@@ -928,11 +928,16 @@ function subscribeChats() {
     .channel('public:chats')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, payload => {
       const newMsg = payload.new;
+      
+      // Prevent double rendering of optimistically added chats
+      const isDuplicate = chats.some(c => c.text === newMsg.text && c.sender === newMsg.sender_name);
+      if (isDuplicate) return;
+      
       const mapped = {
         sender: newMsg.sender_name,
         text: newMsg.text,
         time: new Date(newMsg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-        type: newMsg.sender_name === currentProfile.username ? 'outgoing' : 'incoming'
+        type: (currentProfile && newMsg.sender_name === currentProfile.username) ? 'outgoing' : 'incoming'
       };
       
       chats.push(mapped);
@@ -1716,26 +1721,32 @@ async function handleSendChat(e) {
   const txt = chatInput.value.trim();
   if (!txt) return;
   
+  // Clear input instantly for snappy feedback
+  chatInput.value = '';
+  
+  const senderName = (currentProfile && currentProfile.username) 
+    ? currentProfile.username 
+    : (currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'User');
+  
+  // Optimistically add to UI list immediately
+  chats.push({
+    sender: senderName,
+    text: txt,
+    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    type: 'outgoing'
+  });
+  renderChats();
+  if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+  
   if (isDemoMode) {
-    const rawChats = JSON.parse(safeStorage.getItem('demo_chats') || '[]');
+    const rawChats = JSON.parse(safeStorage.getItem('demo_chats_v2') || '[]');
     const newChat = {
-      sender_name: currentProfile.username,
+      sender_name: senderName,
       text: txt,
       created_at: new Date().toISOString()
     };
     rawChats.push(newChat);
-    safeStorage.setItem('demo_chats', JSON.stringify(rawChats));
-    
-    chatInput.value = '';
-    
-    chats.push({
-      sender: newChat.sender_name,
-      text: newChat.text,
-      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      type: 'outgoing'
-    });
-    renderChats();
-    chatFeed.scrollTop = chatFeed.scrollHeight;
+    safeStorage.setItem('demo_chats_v2', JSON.stringify(rawChats));
     
     // Auto trigger support agent reply in demo mode
     triggerSupportAutoReply();
@@ -1746,17 +1757,16 @@ async function handleSendChat(e) {
     const { error } = await supabase
       .from('chats')
       .insert({
-        sender_name: currentProfile.username,
+        sender_name: senderName,
         text: txt
       });
       
     if (error) throw error;
-    chatInput.value = '';
     
     // Auto trigger support agent reply in real mode
     triggerSupportAutoReply();
   } catch (err) {
-    alert("Error sending chat: " + err.message);
+    console.error("Supabase chat save error:", err.message);
   }
 }
 
@@ -1772,14 +1782,14 @@ function triggerSupportAutoReply() {
       const randomReply = supportReplies[Math.floor(Math.random() * supportReplies.length)];
       
       if (isDemoMode) {
-        const rawChats = JSON.parse(safeStorage.getItem('demo_chats') || '[]');
+        const rawChats = JSON.parse(safeStorage.getItem('demo_chats_v2') || '[]');
         const newReply = {
           sender_name: 'Support Agent Az',
           text: randomReply,
           created_at: new Date().toISOString()
         };
         rawChats.push(newReply);
-        safeStorage.setItem('demo_chats', JSON.stringify(rawChats));
+        safeStorage.setItem('demo_chats_v2', JSON.stringify(rawChats));
         
         chats.push({
           sender: newReply.sender_name,
