@@ -49,7 +49,7 @@ try {
   alert("Database connection error: " + e.message);
 }
 
-const isDemoMode = window.location.protocol === 'file:';
+let isDemoMode = window.location.protocol === 'file:' || safeStorage.getItem('demo_session_active') === 'true';
 
 // 2. Default Seed Data (Pre-populates database if empty)
 const INITIAL_TRANSACTIONS = [
@@ -91,6 +91,46 @@ const INITIAL_FUNDING = [
   { source: "Initial Funding Deposit", date: "2026-07-01", amount: 3000 },
   { source: "Mid-month Topup", date: "2026-07-15", amount: 2500 }
 ];
+
+function makeInitialDataDynamic() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  
+  // Shift INITIAL_TRANSACTIONS to the current month dynamically
+  INITIAL_TRANSACTIONS.forEach(tx => {
+    const day = tx.date.split('-')[2];
+    tx.date = `${year}-${month}-${day}`;
+  });
+  
+  // Shift INITIAL_FUNDING to the current month dynamically
+  INITIAL_FUNDING.forEach(f => {
+    const day = f.date.split('-')[2];
+    f.date = `${year}-${month}-${day}`;
+  });
+}
+
+function checkAndUpgradeDemoData() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const expectedPrefix = `${year}-${month}`;
+  
+  let storedTxs = safeStorage.getItem('demo_transactions');
+  if (storedTxs) {
+    try {
+      const parsed = JSON.parse(storedTxs);
+      if (parsed.length > 0 && parsed[0].date && !parsed[0].date.startsWith(expectedPrefix)) {
+        // Clear cached demo values so they re-seed using the current active month
+        safeStorage.removeItem('demo_transactions');
+        safeStorage.removeItem('demo_funding');
+        safeStorage.removeItem('demo_chats_v2');
+      }
+    } catch (e) {
+      console.warn("Failed to parse demo transactions:", e);
+    }
+  }
+}
 
 const DEFAULT_LIMIT = 10000;
 
@@ -276,6 +316,8 @@ let isUpdatePasswordMode = false;
 
 // Initialize Application
 function init() {
+  makeInitialDataDynamic();
+  checkAndUpgradeDemoData();
   initializeDOMElements();
   setupTheme();
   setupNavigation();
@@ -342,13 +384,15 @@ function init() {
   if (calPrevBtn) calPrevBtn.addEventListener('click', () => changeMonth(-1));
   if (calNextBtn) calNextBtn.addEventListener('click', () => changeMonth(1));
 
-  // Show demo button if running offline
+  // Set up demo button
   const demoContainer = document.getElementById('demo-mode-container');
   const demoBtn = document.getElementById('demo-mode-btn');
-  if (isDemoMode && demoContainer && demoBtn) {
+  if (demoContainer && demoBtn) {
     demoContainer.style.display = 'block';
     demoBtn.addEventListener('click', () => {
       try {
+        isDemoMode = true;
+        safeStorage.setItem('demo_session_active', 'true');
         const demoSession = {
           user: {
             id: 'demo-user-id',
