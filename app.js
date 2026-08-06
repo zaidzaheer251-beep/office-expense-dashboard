@@ -384,28 +384,6 @@ function init() {
   if (calPrevBtn) calPrevBtn.addEventListener('click', () => changeMonth(-1));
   if (calNextBtn) calNextBtn.addEventListener('click', () => changeMonth(1));
 
-  // Set up demo button
-  const demoContainer = document.getElementById('demo-mode-container');
-  const demoBtn = document.getElementById('demo-mode-btn');
-  if (demoContainer && demoBtn) {
-    demoContainer.style.display = 'block';
-    demoBtn.addEventListener('click', () => {
-      try {
-        isDemoMode = true;
-        safeStorage.setItem('demo_session_active', 'true');
-        const demoSession = {
-          user: {
-            id: 'demo-user-id',
-            email: 'demo@approx.com',
-            user_metadata: { username: 'Aamir Computer', role: 'admin' }
-          }
-        };
-        handleAuthState(demoSession);
-      } catch (err) {
-        alert("Demo Mode Click Error: " + err.message + "\nStack: " + err.stack);
-      }
-    });
-  }
 
   // Check current session immediately
   checkSession();
