@@ -49,7 +49,7 @@ try {
   alert("Database connection error: " + e.message);
 }
 
-const isDemoMode = false;
+let isDemoMode = false;
 
 // 2. Default Seed Data (Pre-populates database if empty)
 const INITIAL_TRANSACTIONS = [
@@ -362,6 +362,63 @@ function init() {
   if (calNextBtn) calNextBtn.addEventListener('click', () => changeMonth(1));
 
 
+  // Set up in-memory temporary demo button
+  const demoBtn = document.getElementById('demo-mode-btn');
+  if (demoBtn) {
+    demoBtn.addEventListener('click', () => {
+      isDemoMode = true;
+      
+      currentUser = {
+        id: 'demo-user-id',
+        email: 'demo@approx.com'
+      };
+      
+      currentProfile = {
+        username: 'Demo Client',
+        role: 'admin',
+        avatar_url: ''
+      };
+      
+      // Shift INITIAL_TRANSACTIONS and INITIAL_FUNDING dates to the current month
+      makeInitialDataDynamic();
+      
+      // Load copies into memory
+      transactions = JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS)).map((tx, idx) => ({
+        id: 'tx-demo-' + idx,
+        ...tx
+      }));
+      
+      fundingHistory = JSON.parse(JSON.stringify(INITIAL_FUNDING)).map((f, idx) => ({
+        id: 'fund-demo-' + idx,
+        ...f
+      }));
+      
+      chats = [
+        { sender: 'Support Agent Az', text: 'Hello! Welcome to Approx Live Support Helpdesk. How can I assist you with your office expenses today?', time: '12:00 PM', type: 'incoming' },
+        { sender: 'Demo Client', text: 'Hi, I am testing the demo mode of the dashboard.', time: '12:01 PM', type: 'outgoing' },
+        { sender: 'Support Agent Az', text: 'Great! You can add/delete expenses, view reports, or test calculations. Everything works in-memory!', time: '12:02 PM', type: 'incoming' }
+      ];
+      
+      // Update display details
+      const userDisplayName = document.getElementById('user-display-name');
+      const userDisplayRole = document.getElementById('user-display-role');
+      if (userDisplayName) userDisplayName.textContent = currentProfile.username;
+      if (userDisplayRole) userDisplayRole.textContent = 'Admin';
+      
+      // Update default currency limits
+      updateMonthlyLimitFromCurrency();
+      
+      // Switch view containers
+      const authContainer = document.getElementById('auth-container');
+      const appContainer = document.getElementById('app-container');
+      if (authContainer) authContainer.classList.add('hidden');
+      if (appContainer) appContainer.classList.remove('hidden');
+      
+      // Render components
+      renderAll();
+    });
+  }
+
   // Check current session immediately
   checkSession();
 }
@@ -645,7 +702,12 @@ function setupAuthListeners() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       if (confirm('Are you sure you want to log out?')) {
-        await supabase.auth.signOut();
+        if (isDemoMode) {
+          isDemoMode = false;
+          window.location.reload();
+        } else {
+          await supabase.auth.signOut();
+        }
       }
     });
   }
@@ -1079,6 +1141,12 @@ function renderTransactionsTable() {
 // Global Delete Action
 async function deleteTransaction(id) {
   if (confirm("Are you sure you want to delete this expense record?")) {
+    if (isDemoMode) {
+      transactions = transactions.filter(tx => tx.id !== id);
+      renderAll();
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('transactions')
@@ -1293,6 +1361,20 @@ async function handleAddFunding(e) {
   
   if (!source || isNaN(amount) || amount <= 0 || !date) return;
 
+  if (isDemoMode) {
+    const newFunding = {
+      id: 'fund-demo-' + Date.now(),
+      source,
+      date,
+      amount: toBaseCurrency(amount)
+    };
+    fundingHistory.unshift(newFunding);
+    sourceInput.value = '';
+    amountInput.value = '';
+    renderAll();
+    return;
+  }
+
   try {
     const { error } = await supabase
       .from('funding')
@@ -1316,6 +1398,12 @@ async function handleAddFunding(e) {
 
 async function deleteFunding(id) {
   if (confirm("Are you sure you want to delete this funding deposit record?")) {
+    if (isDemoMode) {
+      fundingHistory = fundingHistory.filter(f => f.id !== id);
+      renderAll();
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('funding')
@@ -1628,6 +1716,11 @@ async function handleSendChat(e) {
   renderChats();
   if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
   
+  if (isDemoMode) {
+    triggerSupportAutoReply();
+    return;
+  }
+
   try {
     const { error } = await supabase
       .from('chats')
@@ -1655,6 +1748,18 @@ function triggerSupportAutoReply() {
         "Please provide the transaction ID or details if you are reporting a specific transaction issue."
       ];
       const randomReply = supportReplies[Math.floor(Math.random() * supportReplies.length)];
+      
+      if (isDemoMode) {
+        chats.push({
+          sender: 'Support Agent Az',
+          text: randomReply,
+          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          type: 'incoming'
+        });
+        renderChats();
+        if (chatFeed) chatFeed.scrollTop = chatFeed.scrollHeight;
+        return;
+      }
       
       await supabase
         .from('chats')
@@ -1884,22 +1989,28 @@ function setupSettingsListeners() {
       }
 
       try {
-        // 1. Update Supabase Auth user metadata
-        const { error: authErr } = await supabase.auth.updateUser({
-          data: { username: newUsername }
-        });
-        if (authErr) throw authErr;
+        if (isDemoMode) {
+          currentProfile.username = newUsername;
+          if (userDisplayName) userDisplayName.textContent = newUsername;
+          alert("Profile details updated successfully (Demo Mode)!");
+        } else {
+          // 1. Update Supabase Auth user metadata
+          const { error: authErr } = await supabase.auth.updateUser({
+            data: { username: newUsername }
+          });
+          if (authErr) throw authErr;
 
-        // 2. Update profiles table
-        const { error: dbErr } = await supabase
-          .from('profiles')
-          .update({ username: newUsername })
-          .eq('id', currentUser.id);
-        if (dbErr) throw dbErr;
+          // 2. Update profiles table
+          const { error: dbErr } = await supabase
+            .from('profiles')
+            .update({ username: newUsername })
+            .eq('id', currentUser.id);
+          if (dbErr) throw dbErr;
 
-        currentProfile.username = newUsername;
-        if (userDisplayName) userDisplayName.textContent = newUsername;
-        alert("Profile details updated successfully!");
+          currentProfile.username = newUsername;
+          if (userDisplayName) userDisplayName.textContent = newUsername;
+          alert("Profile details updated successfully!");
+        }
       } catch (err) {
         alert("Failed to update profile: " + err.message);
       } finally {
@@ -1934,24 +2045,30 @@ function setupSettingsListeners() {
       }
 
       try {
-        // 1. Save to local storage first (always succeeds!)
-        safeStorage.setItem(`office_avatar_${currentUser.id}`, finalAvatarUrl);
-        currentProfile.avatar_url = finalAvatarUrl;
-        updateAvatarDisplay(finalAvatarUrl);
+        if (isDemoMode) {
+          currentProfile.avatar_url = finalAvatarUrl;
+          updateAvatarDisplay(finalAvatarUrl);
+          alert("Profile picture updated successfully (Demo Mode)!");
+        } else {
+          // 1. Save to local storage first (always succeeds!)
+          safeStorage.setItem(`office_avatar_${currentUser.id}`, finalAvatarUrl);
+          currentProfile.avatar_url = finalAvatarUrl;
+          updateAvatarDisplay(finalAvatarUrl);
 
-        // 2. Attempt to sync to Supabase auth metadata
-        try {
-          const { error: authErr } = await supabase.auth.updateUser({
-            data: { avatar_url: finalAvatarUrl }
-          });
-          if (authErr) {
-            console.warn("Failed to sync avatar to Supabase user metadata:", authErr.message);
+          // 2. Attempt to sync to Supabase auth metadata
+          try {
+            const { error: authErr } = await supabase.auth.updateUser({
+              data: { avatar_url: finalAvatarUrl }
+            });
+            if (authErr) {
+              console.warn("Failed to sync avatar to Supabase user metadata:", authErr.message);
+            }
+          } catch (apiErr) {
+            console.warn("Failed to sync avatar to Supabase database:", apiErr.message);
           }
-        } catch (apiErr) {
-          console.warn("Failed to sync avatar to Supabase database:", apiErr.message);
-        }
 
-        alert("Profile picture updated successfully!");
+          alert("Profile picture updated successfully!");
+        }
       } catch (err) {
         alert("Failed to update profile picture: " + err.message);
       } finally {
@@ -1990,9 +2107,13 @@ function setupSettingsListeners() {
       }
 
       try {
-        const { error } = await supabase.auth.updateUser({ password: newPass });
-        if (error) throw error;
-        alert("Password updated successfully!");
+        if (isDemoMode) {
+          alert("Password change simulated successfully (Demo Mode)!");
+        } else {
+          const { error } = await supabase.auth.updateUser({ password: newPass });
+          if (error) throw error;
+          alert("Password updated successfully!");
+        }
         newPasswordInput.value = '';
         confirmPasswordInput.value = '';
       } catch (err) {
@@ -2112,7 +2233,7 @@ function updateAvatarDisplay(url) {
 async function handleAddExpense(e) {
   e.preventDefault();
   
-  if (!currentUser) {
+  if (!isDemoMode && !currentUser) {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       currentUser = session.user;
@@ -2134,6 +2255,22 @@ async function handleAddExpense(e) {
   const category = categoryInput.value;
   
   if (!item || isNaN(amount) || amount <= 0 || !date) return;
+
+  if (isDemoMode) {
+    const newTx = {
+      id: 'tx-demo-' + Date.now(),
+      date,
+      item,
+      category,
+      amount: toBaseCurrency(amount)
+    };
+    transactions.unshift(newTx);
+    alert("Expense registered successfully (Demo Mode)!");
+    itemInput.value = '';
+    amountInput.value = '';
+    renderAll();
+    return;
+  }
 
   try {
     const { error } = await supabase
