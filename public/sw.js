@@ -1,4 +1,4 @@
-const CACHE_NAME = 'approx-expense-v2';
+const CACHE_NAME = 'approx-expense-v3';
 const ASSETS = [
   './index.html',
   './style.css',
