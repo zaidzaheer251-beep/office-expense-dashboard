@@ -50,6 +50,7 @@ try {
 }
 
 let isDemoMode = false;
+let debts = [];
 
 // 2. Default Seed Data (Pre-populates database if empty)
 const INITIAL_TRANSACTIONS = [
@@ -209,6 +210,7 @@ let reportsPieChartInstance = null;
 const TAB_DESCRIPTIONS = {
   "dashboard-view": { title: "Dashboard", sub: "Welcome back! Here's your office expenses summary." },
   "payments-view": { title: "Received Funding", sub: "Track incoming funding and manage office deposits." },
+  "udhaar-view": { title: "Udhaar (Lend/Borrow) Ledger", sub: "Manage cash lent to or borrowed from others with daily due-date reminders." },
   "transactions-view": { title: "Transactions", sub: "Search, filter, and export detailed office logs." },
   "support-view": { title: "Live Support Helpdesk", sub: "Get 24/7 assistance for your office expenses." },
   "reports-view": { title: "Analytics & Reports", sub: "Detailed graphs and key insights of your spending." },
@@ -226,6 +228,9 @@ let chatFeed, chatForm, chatInput;
 let financialInsightsBox;
 let calendarCells, calendarMonthYear, calPrevBtn, calNextBtn;
 let authForm, authTitle, authSubtitle, authSubmitBtn, authToggleLink, authToggleText, authUsernameGroup, authUsername, authEmail, authPassword, logoutBtn, userDisplayName, userDisplayRole;
+
+// Udhaar Elements
+let addDebtForm, debtsListContainer, settledDebtsList, totalLentAmount, totalBorrowedAmount, settledCount, toggleSettledHistoryBtn, debtReminderBanner, debtReminderText, goToDebtsBtn;
 
 function initializeDOMElements() {
   searchInput = document.getElementById('search-input');
@@ -286,6 +291,18 @@ function initializeDOMElements() {
   logoutBtn = document.getElementById('logout-btn');
   userDisplayName = document.getElementById('user-display-name');
   userDisplayRole = document.getElementById('user-display-role');
+
+  // Udhaar Element Initializations
+  addDebtForm = document.getElementById('add-debt-form');
+  debtsListContainer = document.getElementById('debts-list-container');
+  settledDebtsList = document.getElementById('settled-debts-list');
+  totalLentAmount = document.getElementById('total-lent-amount');
+  totalBorrowedAmount = document.getElementById('total-borrowed-amount');
+  settledCount = document.getElementById('settled-count');
+  toggleSettledHistoryBtn = document.getElementById('toggle-settled-history');
+  debtReminderBanner = document.getElementById('debt-reminder-banner');
+  debtReminderText = document.getElementById('debt-reminder-text');
+  goToDebtsBtn = document.getElementById('go-to-debts-btn');
 }
 
 let isSignUpMode = false;
@@ -305,6 +322,7 @@ function init() {
   const todayString = new Date().toISOString().substring(0, 10);
   if (document.getElementById('expense-date')) document.getElementById('expense-date').value = todayString;
   if (document.getElementById('funding-date')) document.getElementById('funding-date').value = todayString;
+  if (document.getElementById('debt-due-date')) document.getElementById('debt-due-date').value = todayString;
   
   // Global search input filters active tab details
   searchInput.addEventListener('input', () => {
@@ -356,6 +374,11 @@ function init() {
 
   // Listeners: Chat
   if (chatForm) chatForm.addEventListener('submit', handleSendChat);
+
+  // Listeners: Udhaar
+  if (addDebtForm) addDebtForm.addEventListener('submit', handleAddDebt);
+  if (toggleSettledHistoryBtn) toggleSettledHistoryBtn.addEventListener('click', toggleSettledHistory);
+  if (goToDebtsBtn) goToDebtsBtn.addEventListener('click', () => switchTab('udhaar-view'));
 
   // Listeners: Calendar
   if (calPrevBtn) calPrevBtn.addEventListener('click', () => changeMonth(-1));
@@ -503,6 +526,8 @@ function setupNavigation() {
           renderReportsTab();
         } else if (tabId === 'calendar-view') {
           renderCalendar();
+        } else if (tabId === 'udhaar-view') {
+          renderDebtsTab();
         }
       }
     });
@@ -885,6 +910,24 @@ async function loadDatabaseData() {
     if (fundError) throw fundError;
     fundingHistory = fund || [];
 
+    // 2.5. Fetch debts (Lend/Borrow Udhaar ledger)
+    try {
+      const { data: dbt, error: debtError } = await supabase
+        .from('debts')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false });
+      if (debtError) {
+        console.warn('Debts table error (possibly needs schema execution):', debtError.message);
+        debts = [];
+      } else {
+        debts = dbt || [];
+      }
+    } catch (e) {
+      console.warn('Failed to load debts. Falling back to empty array.', e.message);
+      debts = [];
+    }
+
     // 3. Fetch chats (last 50 messages)
     const { data: chatMsgs, error: chatError } = await supabase
       .from('chats')
@@ -1046,6 +1089,8 @@ function renderAll() {
   renderChats();
   renderReportsTab();
   renderCalendar();
+  renderDebtsTab();
+  checkDueReminders();
 }
 
 // 5. Render Shared Metrics
@@ -2343,6 +2388,360 @@ function updateThemeIcon(theme) {
   if (theme === 'dark') icon.className = 'fa-solid fa-sun';
   else icon.className = 'fa-solid fa-moon';
 }
+
+// --- UDHAAR (LEND/BORROW) LEDGER LOGIC ---
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+async function fetchDebts() {
+  if (isDemoMode) return;
+  if (!currentUser) return;
+  try {
+    const { data, error } = await supabase
+      .from('debts')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    debts = data || [];
+  } catch (err) {
+    console.error("Error fetching debts:", err.message);
+  }
+}
+
+async function handleAddDebt(e) {
+  e.preventDefault();
+  
+  const personName = document.getElementById('debt-person').value.trim();
+  const amountVal = parseFloat(document.getElementById('debt-amount').value);
+  const typeVal = document.querySelector('input[name="debt-type"]:checked').value;
+  const dueDateVal = document.getElementById('debt-due-date').value;
+  const notesVal = document.getElementById('debt-notes').value.trim();
+
+  if (!personName || isNaN(amountVal) || amountVal <= 0 || !dueDateVal) {
+    alert("Please fill in all required fields correctly.");
+    return;
+  }
+
+  // Convert entered amount to PKR base if selected currency is USD/GBP
+  const amountBase = toBaseCurrency(amountVal);
+
+  const newDebt = {
+    person_name: personName,
+    amount: amountBase,
+    type: typeVal,
+    due_date: dueDateVal,
+    status: 'pending',
+    notes: notesVal || null
+  };
+
+  if (isDemoMode) {
+    // Save locally
+    newDebt.id = 'debt-demo-' + Date.now();
+    newDebt.created_at = new Date().toISOString();
+    debts.unshift(newDebt);
+    
+    // Clear form
+    addDebtForm.reset();
+    const todayString = new Date().toISOString().substring(0, 10);
+    document.getElementById('debt-due-date').value = todayString;
+    
+    renderAll();
+    alert("Demo Mode: Debt entry added successfully in-memory!");
+    return;
+  }
+
+  if (!currentUser) {
+    alert("Please log in to save debts.");
+    return;
+  }
+
+  newDebt.user_id = currentUser.id;
+
+  try {
+    const { data, error } = await supabase
+      .from('debts')
+      .insert([newDebt])
+      .select();
+
+    if (error) {
+      if (error.message.includes('relation "debts" does not exist') || error.message.includes('does not exist')) {
+        const sqlScript = `CREATE TABLE IF NOT EXISTS debts (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,\n  person_name TEXT NOT NULL,\n  amount NUMERIC NOT NULL,\n  type TEXT CHECK (type IN ('lent', 'borrowed')) NOT NULL,\n  due_date DATE,\n  status TEXT CHECK (status IN ('pending', 'settled')) DEFAULT 'pending' NOT NULL,\n  notes TEXT,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL\n);\nALTER TABLE debts ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Users can manage their own debts" ON debts FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);`;
+        alert("Database Setup Required!\n\nThe 'debts' table does not exist in your Supabase database yet. Please run the following SQL script in your Supabase SQL Editor:\n\n" + sqlScript);
+      } else {
+        throw error;
+      }
+      return;
+    }
+
+    if (data && data[0]) {
+      debts.unshift(data[0]);
+    } else {
+      await fetchDebts();
+    }
+
+    addDebtForm.reset();
+    const todayString = new Date().toISOString().substring(0, 10);
+    document.getElementById('debt-due-date').value = todayString;
+    
+    renderAll();
+    alert("Debt entry added successfully!");
+  } catch (err) {
+    alert("Error adding debt: " + err.message);
+  }
+}
+
+async function handleSettleDebt(id) {
+  if (isDemoMode) {
+    const idx = debts.findIndex(d => d.id === id);
+    if (idx !== -1) {
+      debts[idx].status = 'settled';
+      renderAll();
+      alert("Demo Mode: Debt marked as settled!");
+    }
+    return;
+  }
+
+  try {
+    const { error } = await supabase
+      .from('debts')
+      .update({ status: 'settled' })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    const idx = debts.findIndex(d => d.id === id);
+    if (idx !== -1) debts[idx].status = 'settled';
+
+    renderAll();
+    alert("Debt marked as settled!");
+  } catch (err) {
+    alert("Error settling debt: " + err.message);
+  }
+}
+
+async function handleDeleteDebt(id) {
+  if (!confirm("Are you sure you want to delete this debt entry?")) return;
+
+  if (isDemoMode) {
+    debts = debts.filter(d => d.id !== id);
+    renderAll();
+    alert("Demo Mode: Debt entry deleted!");
+    return;
+  }
+
+  try {
+    const { error } = await supabase
+      .from('debts')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    debts = debts.filter(d => d.id !== id);
+    renderAll();
+    alert("Debt entry deleted successfully!");
+  } catch (err) {
+    alert("Error deleting debt: " + err.message);
+  }
+}
+
+function renderDebtsTab() {
+  if (!debtsListContainer) return;
+
+  let totalLent = 0;
+  let totalBorrowed = 0;
+
+  const pendingList = debts.filter(d => d.status === 'pending');
+  const settledList = debts.filter(d => d.status === 'settled');
+
+  pendingList.forEach(d => {
+    if (d.type === 'lent') {
+      totalLent += parseFloat(d.amount);
+    } else {
+      totalBorrowed += parseFloat(d.amount);
+    }
+  });
+
+  if (totalLentAmount) totalLentAmount.textContent = formatCurrency(totalLent);
+  if (totalBorrowedAmount) totalBorrowedAmount.textContent = formatCurrency(totalBorrowed);
+  if (settledCount) settledCount.textContent = settledList.length.toString();
+
+  if (pendingList.length === 0) {
+    debtsListContainer.innerHTML = `
+      <div class="empty-state" style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+        <i class="fa-solid fa-square-check" style="font-size: 40px; color: var(--success-color); margin-bottom: 10px;"></i>
+        <p>No active debts! You are completely clear.</p>
+      </div>
+    `;
+  } else {
+    debtsListContainer.innerHTML = '';
+    const sortedPending = [...pendingList].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+    
+    sortedPending.forEach(d => {
+      const isOverdue = new Date(d.due_date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
+      const isDueToday = new Date(d.due_date).setHours(0,0,0,0) === new Date().setHours(0,0,0,0);
+      
+      let dateBadgeStyle = 'background: rgba(100, 116, 139, 0.1); color: var(--text-secondary);';
+      let dateText = new Date(d.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      
+      if (isOverdue) {
+        dateBadgeStyle = 'background: rgba(239, 68, 68, 0.15); color: var(--danger-color); font-weight: bold; border: 1px solid rgba(239, 68, 68, 0.3);';
+        dateText += ' (OVERDUE)';
+      } else if (isDueToday) {
+        dateBadgeStyle = 'background: rgba(245, 158, 11, 0.15); color: var(--warning-color); font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.3);';
+        dateText += ' (DUE TODAY)';
+      }
+
+      const typeBadge = d.type === 'lent' 
+        ? `<span style="background: rgba(16, 185, 129, 0.1); color: var(--success-color); padding: 4px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Lent (Lena)</span>`
+        : `<span style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); padding: 4px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-arrow-down-left"></i> Borrowed (Dena)</span>`;
+
+      const card = document.createElement('div');
+      card.className = 'debt-card';
+      card.style.cssText = `
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        box-shadow: var(--shadow-sm);
+      `;
+      card.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 6px; flex-grow: 1;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <strong style="font-size: 15px; color: var(--text-primary);">${escapeHTML(d.person_name)}</strong>
+            ${typeBadge}
+          </div>
+          ${d.notes ? `<p style="font-size: 12px; color: var(--text-secondary); margin: 0;">${escapeHTML(d.notes)}</p>` : ''}
+          <div style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+            <span style="font-size: 11px; color: var(--text-secondary);">Due:</span>
+            <span style="padding: 2px 8px; border-radius: var(--radius-sm); font-size: 11px; ${dateBadgeStyle}">${dateText}</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px; min-width: 100px;">
+          <span style="font-size: 16px; font-weight: 700; color: ${d.type === 'lent' ? 'var(--success-color)' : 'var(--danger-color)'};">
+            ${d.type === 'lent' ? '+' : '-'}${formatCurrency(d.amount)}
+          </span>
+          <div style="display: flex; gap: 8px;">
+            <button data-action="settle" data-id="${d.id}" title="Mark as Settled" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); padding: 5px 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+              <i class="fa-solid fa-check"></i> Settle
+            </button>
+            <button data-action="delete" data-id="${d.id}" title="Delete Entry" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius-sm); padding: 5px 8px; cursor: pointer; font-size: 12px;">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>
+      `;
+      
+      debtsListContainer.appendChild(card);
+    });
+
+    // Bind event listeners dynamically
+    debtsListContainer.querySelectorAll('button[data-action="settle"]').forEach(btn => {
+      btn.addEventListener('click', () => handleSettleDebt(btn.getAttribute('data-id')));
+    });
+    debtsListContainer.querySelectorAll('button[data-action="delete"]').forEach(btn => {
+      btn.addEventListener('click', () => handleDeleteDebt(btn.getAttribute('data-id')));
+    });
+  }
+
+  // Render settled history
+  if (settledList.length === 0) {
+    if (settledDebtsList) {
+      settledDebtsList.innerHTML = `<p style="font-size: 12px; color: var(--text-secondary); text-align: center; margin: 10px 0;">No settled debts yet.</p>`;
+    }
+  } else {
+    if (settledDebtsList) {
+      settledDebtsList.innerHTML = '';
+      settledList.forEach(d => {
+        const item = document.createElement('div');
+        item.style.cssText = `
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: var(--bg-body);
+          border: 1px solid var(--border-color);
+          border-radius: var(--radius-sm);
+          padding: 8px 12px;
+          font-size: 12px;
+          opacity: 0.75;
+        `;
+        item.innerHTML = `
+          <div>
+            <strong style="color: var(--text-primary);">${escapeHTML(d.person_name)}</strong>
+            <span style="font-size: 10px; color: var(--text-secondary); margin-left: 5px;">(${d.type === 'lent' ? 'Lent' : 'Borrowed'})</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="text-decoration: line-through; font-weight: 600; color: var(--text-secondary);">${formatCurrency(d.amount)}</span>
+            <span style="color: var(--success-color); font-weight: 700; font-size: 10px;"><i class="fa-solid fa-circle-check"></i> Settled</span>
+            <button data-action="delete-settled" data-id="${d.id}" style="background: none; border: none; color: var(--danger-color); cursor: pointer; font-size: 11px; padding: 0 4px;"><i class="fa-solid fa-trash-can"></i></button>
+          </div>
+        `;
+        settledDebtsList.appendChild(item);
+      });
+
+      settledDebtsList.querySelectorAll('button[data-action="delete-settled"]').forEach(btn => {
+        btn.addEventListener('click', () => handleDeleteDebt(btn.getAttribute('data-id')));
+      });
+    }
+  }
+}
+
+function checkDueReminders() {
+  if (!debtReminderBanner || !debtReminderText) return;
+
+  const today = new Date().setHours(0,0,0,0);
+  const pendingDue = debts.filter(d => {
+    if (d.status !== 'pending' || !d.due_date) return false;
+    const dueDate = new Date(d.due_date).setHours(0,0,0,0);
+    return dueDate <= today;
+  });
+
+  if (pendingDue.length > 0) {
+    debtReminderBanner.classList.remove('hidden');
+    debtReminderText.textContent = `Daily Reminder: You have ${pendingDue.length} pending payments due today or overdue!`;
+  } else {
+    debtReminderBanner.classList.add('hidden');
+  }
+}
+
+function toggleSettledHistory() {
+  if (!settledDebtsList) return;
+  const isHidden = settledDebtsList.classList.contains('hidden');
+  const icon = toggleSettledHistoryBtn.querySelector('i');
+  
+  if (isHidden) {
+    settledDebtsList.classList.remove('hidden');
+    if (icon) icon.className = 'fa-solid fa-circle-chevron-up';
+  } else {
+    settledDebtsList.classList.add('hidden');
+    if (icon) icon.className = 'fa-solid fa-circle-chevron-down';
+  }
+}
+
+function switchTab(tabId) {
+  const menuItems = document.querySelectorAll('.sidebar-menu .menu-item');
+  const targetItem = Array.from(menuItems).find(item => item.getAttribute('data-tab') === tabId);
+  if (targetItem) {
+    targetItem.click();
+  }
+}
+
+// Bind to window to allow external modules / helpers to invoke
+window.handleSettleDebt = handleSettleDebt;
+window.handleDeleteDebt = handleDeleteDebt;
 
 // Run initialization when DOM is ready
 try {

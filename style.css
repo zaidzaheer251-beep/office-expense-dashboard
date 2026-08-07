@@ -429,6 +429,45 @@ body {
 .metric-sub.up { color: var(--success); }
 .metric-sub.down { color: var(--danger); }
 
+/* Udhaar Tab segmented button control styles */
+.radio-tab-btn {
+  background: var(--bg-card);
+  transition: all 0.2s ease;
+  border: 1px solid var(--border-color);
+}
+.radio-tab-btn:has(input[type="radio"]:checked) {
+  background: var(--bg-body) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15) !important;
+}
+.radio-tab-btn input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Outstanding Debts list hover effect */
+.debt-card {
+  transition: all 0.2s ease-in-out;
+}
+.debt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent-color);
+}
+
+/* Pulse animation for Dashboard Due alert banner */
+@keyframes alertPulse {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+#debt-reminder-banner {
+  animation: alertPulse 2s infinite;
+}
+
 /* Dashboard Middle Row Charts & Panels */
 .dashboard-grid-middle {
   display: grid;

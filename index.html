@@ -156,6 +156,9 @@
         <li class="menu-item" data-tab="payments-view">
           <a href="#"><i class="fa-solid fa-credit-card"></i> Payment</a>
         </li>
+        <li class="menu-item" data-tab="udhaar-view">
+          <a href="#"><i class="fa-solid fa-hand-holding-dollar"></i> Udhaar (Dena/Lena)</a>
+        </li>
         <li class="menu-item" data-tab="transactions-view">
           <a href="#"><i class="fa-solid fa-list-check"></i> Transactions</a>
         </li>
@@ -236,6 +239,17 @@
 
       <!-- TAB 1: DASHBOARD VIEW -->
       <main class="main-content tab-view active" id="dashboard-view">
+        <!-- Due Date Reminder Alert Banner -->
+        <div id="debt-reminder-banner" class="hidden" style="margin-bottom: 20px; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--warning-color); border-radius: var(--radius-md); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 15px; color: var(--text-primary);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-triangle-exclamation" style="color: var(--warning-color); font-size: 18px;"></i>
+            <span id="debt-reminder-text">Daily Reminder: You have 0 pending payments due today!</span>
+          </div>
+          <button id="go-to-debts-btn" class="theme-toggle-btn" style="padding: 6px 12px; font-size: 12px; font-weight: 600; color: #fff; background: var(--accent-color); border: none; border-radius: var(--radius-sm); cursor: pointer;">
+            Settle Now <i class="fa-solid fa-arrow-right-long"></i>
+          </button>
+        </div>
+
         <!-- Metrics Grid -->
         <section class="metrics-grid">
           <div class="metric-card received">
@@ -460,6 +474,88 @@
               </div>
               <button type="submit" class="btn-submit"><i class="fa-solid fa-arrow-down-long"></i> Record Income</button>
             </form>
+          </div>
+        </section>
+      </main>
+
+      <!-- TAB 2.5: UDHAAR (LEND/BORROW) VIEW -->
+      <main class="main-content tab-view" id="udhaar-view">
+        <section class="payments-dashboard-grid" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+          <!-- Left side: Form to Add Debt -->
+          <div class="card-widget" style="flex: 1; min-width: 300px;">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-file-invoice-dollar"></i> Add New Debt Entry</h3>
+            </div>
+            <form id="add-debt-form" style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px;">
+              <div class="form-group">
+                <label for="debt-person">Person Name</label>
+                <input type="text" id="debt-person" placeholder="e.g. Arslan, Ali, Client Name" required>
+              </div>
+              <div class="form-group">
+                <label for="debt-amount">Amount (PKR)</label>
+                <input type="number" id="debt-amount" min="1" placeholder="Enter amount" required>
+              </div>
+              <div class="form-group">
+                <label>Transaction Type</label>
+                <div class="radio-tab-group" style="display: flex; gap: 10px; margin-top: 5px;">
+                  <label class="radio-tab-btn" style="flex: 1; text-align: center; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; display: block; font-weight: 500;">
+                    <input type="radio" name="debt-type" value="lent" checked>
+                    <span style="color: var(--success-color); font-weight: 600;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Lent Cash</span>
+                  </label>
+                  <label class="radio-tab-btn" style="flex: 1; text-align: center; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; display: block; font-weight: 500;">
+                    <input type="radio" name="debt-type" value="borrowed">
+                    <span style="color: var(--danger-color); font-weight: 600;"><i class="fa-solid fa-arrow-down-left"></i> Borrowed</span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="debt-due-date">Due / Reminder Date</label>
+                <input type="date" id="debt-due-date" required>
+              </div>
+              <div class="form-group">
+                <label for="debt-notes">Notes (Optional)</label>
+                <textarea id="debt-notes" rows="2" placeholder="e.g. for office rent, tea box buy etc." style="width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 8px; font-family: inherit; background: var(--bg-card); color: var(--text-primary); resize: none;"></textarea>
+              </div>
+              <button type="submit" class="btn-submit"><i class="fa-solid fa-floppy-disk"></i> Save Debt Entry</button>
+            </form>
+          </div>
+
+          <!-- Right side: Ledger Metrics & Pending Debts List -->
+          <div class="card-widget" style="flex: 1.5; min-width: 350px; display: flex; flex-direction: column; gap: 20px;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <h3><i class="fa-solid fa-list-check"></i> Outstanding Debt Ledger</h3>
+              <!-- Mini stats -->
+              <div style="display: flex; gap: 15px;">
+                <div class="mini-debt-stat" style="text-align: right;">
+                  <span style="font-size: 11px; color: var(--text-secondary); display: block;">Total Lent (Receive)</span>
+                  <strong id="total-lent-amount" style="color: var(--success-color); font-size: 14px;">Rs 0</strong>
+                </div>
+                <div class="mini-debt-stat" style="text-align: right;">
+                  <span style="font-size: 11px; color: var(--text-secondary); display: block;">Total Borrowed (Pay)</span>
+                  <strong id="total-borrowed-amount" style="color: var(--danger-color); font-size: 14px;">Rs 0</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- List of active debts -->
+            <div id="debts-list-container" style="flex-grow: 1; min-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+              <!-- Javascript will render debt cards here -->
+              <div class="empty-state" style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                <i class="fa-solid fa-square-check" style="font-size: 40px; color: var(--success-color); margin-bottom: 10px;"></i>
+                <p>No active debts! You are completely clear.</p>
+              </div>
+            </div>
+            
+            <!-- Collapsible Settled History -->
+            <div class="settled-history-accordion" style="border-top: 1px dashed var(--border-color); padding-top: 15px;">
+              <button id="toggle-settled-history" type="button" style="background: none; border: none; font-size: 13px; font-weight: 600; color: var(--accent-color); cursor: pointer; display: flex; align-items: center; gap: 5px; width: 100%; text-align: left; padding: 0;">
+                <i class="fa-solid fa-circle-chevron-down"></i> View Settled History (<span id="settled-count">0</span>)
+              </button>
+              <div id="settled-debts-list" class="hidden" style="margin-top: 10px; max-height: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                <!-- Settled items will render here -->
+              </div>
+            </div>
+
           </div>
         </section>
       </main>
