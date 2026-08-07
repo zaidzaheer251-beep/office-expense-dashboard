@@ -366,56 +366,60 @@ function init() {
   const demoBtn = document.getElementById('demo-mode-btn');
   if (demoBtn) {
     demoBtn.addEventListener('click', () => {
-      isDemoMode = true;
-      
-      currentUser = {
-        id: 'demo-user-id',
-        email: 'demo@approx.com'
-      };
-      
-      currentProfile = {
-        username: 'Demo Client',
-        role: 'admin',
-        avatar_url: ''
-      };
-      
-      // Shift INITIAL_TRANSACTIONS and INITIAL_FUNDING dates to the current month
-      makeInitialDataDynamic();
-      
-      // Load copies into memory
-      transactions = JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS)).map((tx, idx) => ({
-        id: 'tx-demo-' + idx,
-        ...tx
-      }));
-      
-      fundingHistory = JSON.parse(JSON.stringify(INITIAL_FUNDING)).map((f, idx) => ({
-        id: 'fund-demo-' + idx,
-        ...f
-      }));
-      
-      chats = [
-        { sender: 'Support Agent Az', text: 'Hello! Welcome to Approx Live Support Helpdesk. How can I assist you with your office expenses today?', time: '12:00 PM', type: 'incoming' },
-        { sender: 'Demo Client', text: 'Hi, I am testing the demo mode of the dashboard.', time: '12:01 PM', type: 'outgoing' },
-        { sender: 'Support Agent Az', text: 'Great! You can add/delete expenses, view reports, or test calculations. Everything works in-memory!', time: '12:02 PM', type: 'incoming' }
-      ];
-      
-      // Update display details
-      const userDisplayName = document.getElementById('user-display-name');
-      const userDisplayRole = document.getElementById('user-display-role');
-      if (userDisplayName) userDisplayName.textContent = currentProfile.username;
-      if (userDisplayRole) userDisplayRole.textContent = 'Admin';
-      
-      // Update default currency limits
-      updateMonthlyLimitFromCurrency();
-      
-      // Switch view containers
-      const authContainer = document.getElementById('auth-container');
-      const appContainer = document.getElementById('app-container');
-      if (authContainer) authContainer.classList.add('hidden');
-      if (appContainer) appContainer.classList.remove('hidden');
-      
-      // Render components
-      renderAll();
+      try {
+        isDemoMode = true;
+        
+        currentUser = {
+          id: 'demo-user-id',
+          email: 'demo@approx.com'
+        };
+        
+        currentProfile = {
+          username: 'Demo Client',
+          role: 'admin',
+          avatar_url: ''
+        };
+        
+        // Shift INITIAL_TRANSACTIONS and INITIAL_FUNDING dates to the current month
+        makeInitialDataDynamic();
+        
+        // Load copies into memory
+        transactions = JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS)).map((tx, idx) => ({
+          id: 'tx-demo-' + idx,
+          ...tx
+        }));
+        
+        fundingHistory = JSON.parse(JSON.stringify(INITIAL_FUNDING)).map((f, idx) => ({
+          id: 'fund-demo-' + idx,
+          ...f
+        }));
+        
+        chats = [
+          { sender: 'Support Agent Az', text: 'Hello! Welcome to Approx Live Support Helpdesk. How can I assist you with your office expenses today?', time: '12:00 PM', type: 'incoming' },
+          { sender: 'Demo Client', text: 'Hi, I am testing the demo mode of the dashboard.', time: '12:01 PM', type: 'outgoing' },
+          { sender: 'Support Agent Az', text: 'Great! You can add/delete expenses, view reports, or test calculations. Everything works in-memory!', time: '12:02 PM', type: 'incoming' }
+        ];
+        
+        // Update display details
+        const userDisplayName = document.getElementById('user-display-name');
+        const userDisplayRole = document.getElementById('user-display-role');
+        if (userDisplayName) userDisplayName.textContent = currentProfile.username;
+        if (userDisplayRole) userDisplayRole.textContent = 'Admin';
+        
+        // Update default currency limits
+        updateMonthlyLimitFromCurrency();
+        
+        // Switch view containers
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app-container');
+        if (authContainer) authContainer.classList.add('hidden');
+        if (appContainer) appContainer.classList.remove('hidden');
+        
+        // Render components
+        renderAll();
+      } catch (err) {
+        alert("Demo Mode Init Error: " + err.message + "\n\nStack:\n" + err.stack);
+      }
     });
   }
 
