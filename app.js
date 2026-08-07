@@ -210,9 +210,8 @@ let reportsPieChartInstance = null;
 const TAB_DESCRIPTIONS = {
   "dashboard-view": { title: "Dashboard", sub: "Welcome back! Here's your office expenses summary." },
   "payments-view": { title: "Received Funding", sub: "Track incoming funding and manage office deposits." },
-  "udhaar-view": { title: "Udhaar (Lend/Borrow) Ledger", sub: "Manage cash lent to or borrowed from others with daily due-date reminders." },
+  "udhaar-view": { title: "Lend & Borrow Ledger", sub: "Manage cash lent to or borrowed from others with daily due-date reminders." },
   "transactions-view": { title: "Transactions", sub: "Search, filter, and export detailed office logs." },
-  "support-view": { title: "Live Support Helpdesk", sub: "Get 24/7 assistance for your office expenses." },
   "reports-view": { title: "Analytics & Reports", sub: "Detailed graphs and key insights of your spending." },
   "calendar-view": { title: "Calendar View", sub: "Track dates of office expenses visually." },
   "settings-view": { title: "Account Settings", sub: "Update your profile details, avatar, and security." }
@@ -816,7 +815,6 @@ async function handleAuthState(session) {
       // Sync database data
       await checkAndSeedDatabase();
       await loadDatabaseData();
-      subscribeChats();
     } else {
       currentUser = null;
       currentProfile = null;
@@ -927,21 +925,6 @@ async function loadDatabaseData() {
       console.warn('Failed to load debts. Falling back to empty array.', e.message);
       debts = [];
     }
-
-    // 3. Fetch chats (last 50 messages)
-    const { data: chatMsgs, error: chatError } = await supabase
-      .from('chats')
-      .select('*')
-      .order('created_at', { ascending: true })
-      .limit(50);
-    if (chatError) throw chatError;
-    
-    chats = (chatMsgs || []).map(msg => ({
-      sender: msg.sender_name,
-      text: msg.text,
-      time: new Date(msg.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-      type: msg.sender_name === currentProfile.username ? 'outgoing' : 'incoming'
-    }));
 
     renderAll();
   } catch (err) {
@@ -1086,7 +1069,6 @@ function renderAll() {
   renderCharts();
   renderPaymentsTable();
   renderDetailedTransactions();
-  renderChats();
   renderReportsTab();
   renderCalendar();
   renderDebtsTab();

@@ -78,7 +78,7 @@
   <script src="html2pdf.js"></script>
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=4.4">
+  <link rel="stylesheet" href="style.css?v=4.5">
 </head>
 <body>
   
@@ -157,7 +157,7 @@
           <a href="#"><i class="fa-solid fa-credit-card"></i> Payment</a>
         </li>
         <li class="menu-item" data-tab="udhaar-view">
-          <a href="#"><i class="fa-solid fa-hand-holding-dollar"></i> Udhaar (Dena/Lena)</a>
+          <a href="#"><i class="fa-solid fa-hand-holding-dollar"></i> Lend & Borrow</a>
         </li>
         <li class="menu-item" data-tab="transactions-view">
           <a href="#"><i class="fa-solid fa-list-check"></i> Transactions</a>
@@ -172,9 +172,6 @@
         </li>
         <li class="menu-item" data-tab="settings-view">
           <a href="#"><i class="fa-solid fa-gear"></i> Settings</a>
-        </li>
-        <li class="menu-item" data-tab="support-view">
-          <a href="#"><i class="fa-solid fa-headset"></i> Live Support</a>
         </li>
       </ul>
       
@@ -640,33 +637,6 @@
 
 
 
-      <!-- TAB 5: SUPPORT VIEW -->
-      <main class="main-content tab-view" id="support-view">
-        <section class="chat-layout-wrapper">
-          <div class="card-widget chat-card">
-            <div class="card-header chat-header-border">
-              <div class="profile-widget">
-                <div class="logo-dot" style="width: 10px; height: 10px; background: var(--success);"></div>
-                <div class="profile-info">
-                  <h5>Live Support Desk</h5>
-                  <p>Agent Online 🟢 (Typical response: 2 mins)</p>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Chat Feed -->
-            <div class="chat-feed-container" id="chat-feed">
-              <!-- Initial chats dynamically populated -->
-            </div>
-            
-            <!-- Chat input -->
-            <form class="chat-input-form" id="chat-form">
-              <input type="text" id="chat-input" class="form-control" placeholder="Describe your issue or type a message to support..." required>
-              <button type="submit" class="btn-submit" style="padding: 10px 20px;"><i class="fa-solid fa-paper-plane"></i></button>
-            </form>
-          </div>
-        </section>
-      </main>
 
       <!-- TAB 6: REPORTS VIEW -->
       <main class="main-content tab-view" id="reports-view">
