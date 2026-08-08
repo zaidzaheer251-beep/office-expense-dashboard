@@ -2455,7 +2455,7 @@ async function handleAddDebt(e) {
       .select();
 
     if (error) {
-      if (error.message.includes('relation "debts" does not exist') || error.message.includes('does not exist')) {
+      if (error.message.includes('relation "debts" does not exist') || error.message.includes('does not exist') || error.message.includes('schema cache')) {
         const sqlScript = `CREATE TABLE IF NOT EXISTS debts (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,\n  person_name TEXT NOT NULL,\n  amount NUMERIC NOT NULL,\n  type TEXT CHECK (type IN ('lent', 'borrowed')) NOT NULL,\n  due_date DATE,\n  status TEXT CHECK (status IN ('pending', 'settled')) DEFAULT 'pending' NOT NULL,\n  notes TEXT,\n  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL\n);\nALTER TABLE debts ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "Users can manage their own debts" ON debts FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);`;
         alert("Database Setup Required!\n\nThe 'debts' table does not exist in your Supabase database yet. Please run the following SQL script in your Supabase SQL Editor:\n\n" + sqlScript);
       } else {
