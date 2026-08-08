@@ -1299,77 +1299,175 @@ body {
   }
   
   
-  /* Dashboard recent transactions formatting */
+  /* Dashboard recent transactions formatting - Compact Grid Layout */
+  #transaction-rows tr {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    gap: 6px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 8px !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+  #transaction-rows tr:hover {
+    border-color: var(--primary-color) !important;
+  }
   #transaction-rows td {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 8px 0 !important;
-    border-bottom: 1px dashed var(--border-color) !important;
-    width: 100% !important;
+    display: inline-flex !important;
+    padding: 0 !important;
+    border: none !important;
+    width: auto !important;
+    background: none !important;
+  }
+  #transaction-rows td::before {
+    display: none !important; /* Hide Category/Date/Amount labels */
   }
   #transaction-rows td:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
     display: block !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    padding-bottom: 10px !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 0 !important;
   }
-  #transaction-rows td:nth-child(2)::before { content: "Category"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
-  #transaction-rows td:nth-child(3)::before { content: "Date"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
-  #transaction-rows td:nth-child(4)::before { content: "Amount"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
-  #transaction-rows td:nth-child(5) {
+  #transaction-rows td:nth-child(2) {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+  #transaction-rows td:nth-child(3) {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    margin-left: 90px !important;
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    align-items: center !important;
+  }
+  #transaction-rows td:nth-child(4) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
     justify-content: flex-end !important;
-    border-bottom: none !important;
-    padding-top: 10px !important;
+  }
+  #transaction-rows td:nth-child(5) {
+    display: none !important; /* Hide action trash button on mobile list */
   }
   
-  /* Funding history table formatting */
+  /* Funding history table formatting - Compact Grid Layout */
+  #payment-rows tr {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    gap: 6px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 8px !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+  #payment-rows tr:hover {
+    border-color: var(--primary-color) !important;
+  }
   #payment-rows td {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 8px 0 !important;
-    border-bottom: 1px dashed var(--border-color) !important;
-    width: 100% !important;
+    display: inline-flex !important;
+    padding: 0 !important;
+    border: none !important;
+    width: auto !important;
+    background: none !important;
+  }
+  #payment-rows td::before {
+    display: none !important;
   }
   #payment-rows td:nth-child(1) {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
     display: block !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    padding-bottom: 10px !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 0 !important;
   }
-  #payment-rows td:nth-child(2)::before { content: "Date"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
-  #payment-rows td:nth-child(3)::before { content: "Amount"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
-  #payment-rows td:nth-child(4) {
+  #payment-rows td:nth-child(2) {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+  }
+  #payment-rows td:nth-child(3) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
     justify-content: flex-end !important;
-    border-bottom: none !important;
-    padding-top: 10px !important;
+    color: var(--success) !important;
+  }
+  #payment-rows td:nth-child(4) {
+    display: none !important; /* Hide action trash button on mobile list */
   }
   
-  /* Detailed transaction logs table formatting */
+  /* Detailed transaction logs table formatting - Compact Grid Layout */
+  #detailed-transaction-rows tr {
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    grid-template-rows: auto auto !important;
+    gap: 6px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 8px !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+  #detailed-transaction-rows tr:hover {
+    border-color: var(--primary-color) !important;
+  }
   #detailed-transaction-rows td {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 8px 0 !important;
-    border-bottom: 1px dashed var(--border-color) !important;
-    width: 100% !important;
+    display: inline-flex !important;
+    padding: 0 !important;
+    border: none !important;
+    width: auto !important;
+    background: none !important;
+  }
+  #detailed-transaction-rows td::before {
+    display: none !important;
   }
   #detailed-transaction-rows td:nth-child(2) {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
     display: block !important;
-    border-bottom: 1px solid var(--border-color) !important;
-    padding-bottom: 10px !important;
-    margin-bottom: 6px !important;
-    order: -1 !important; /* Push item name to the top of card */
+    margin-bottom: 0 !important;
   }
-  #detailed-transaction-rows td:nth-child(1)::before { content: "Transaction ID"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
-  #detailed-transaction-rows td:nth-child(3)::before { content: "Category"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
-  #detailed-transaction-rows td:nth-child(4)::before { content: "Date"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
-  #detailed-transaction-rows td:nth-child(5)::before { content: "Amount"; font-weight: 600; color: var(--text-secondary); font-size: 12px; }
-  #detailed-transaction-rows td:nth-child(6) {
+  #detailed-transaction-rows td:nth-child(3) {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+  }
+  #detailed-transaction-rows td:nth-child(4) {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    margin-left: 90px !important;
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    align-items: center !important;
+  }
+  #detailed-transaction-rows td:nth-child(5) {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
     justify-content: flex-end !important;
-    border-bottom: none !important;
-    padding-top: 10px !important;
+  }
+  #detailed-transaction-rows td:nth-child(1) {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    font-size: 10px !important;
+    color: var(--text-secondary) !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+  }
+  #detailed-transaction-rows td:nth-child(6) {
+    display: none !important; /* Hide action trash button on mobile list */
   }
 }
 
@@ -1537,5 +1635,40 @@ body {
   .settings-page-container {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
+  }
+}
+
+/* Modal Overlay & Card Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  transition: opacity 0.2s ease;
+}
+
+.modal-card {
+  animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+}
+
+@keyframes modalSlideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }

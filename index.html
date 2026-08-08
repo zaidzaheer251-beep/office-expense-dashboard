@@ -85,9 +85,9 @@
   <!-- Auth / Login Page -->
   <div class="auth-container" id="auth-container">
     <div class="auth-card">
-      <div class="auth-logo">
-        <div class="logo-dot"></div>
-        <span>Approx Expense</span>
+      <div class="auth-logo" style="display: flex; align-items: center; gap: 10px; margin-bottom: 24px; justify-content: center;">
+        <img src="./icon-512.png" alt="Logo" style="width: 32px; height: 32px; border-radius: 8px; object-fit: cover;">
+        <span style="font-family: var(--font-secondary); font-size: 22px; font-weight: 700; color: var(--text-primary);">Approx Expense</span>
       </div>
       <div class="auth-header">
         <h2 id="auth-title">Welcome Back</h2>
@@ -139,8 +139,8 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-        <div class="sidebar-logo" style="display: flex; align-items: center; gap: 8px;">
-          <div class="logo-dot" style="margin: 0;"></div>
+        <div class="sidebar-logo" style="display: flex; align-items: center; gap: 10px;">
+          <img src="./icon-512.png" alt="Logo" style="width: 28px; height: 28px; border-radius: 6px; object-fit: cover;">
           <span>Approx Expense</span>
         </div>
         <button class="mobile-close-btn" id="mobile-menu-close" style="display: none; background: transparent; border: none; font-size: 18px; color: var(--text-secondary); cursor: pointer; padding: 4px;">
@@ -828,6 +828,24 @@
       <span>Settings</span>
     </button>
   </nav>
+
+  <!-- Detail Action Modal -->
+  <div id="detail-modal" class="modal-overlay hidden">
+    <div class="card-widget modal-card" style="max-width: 400px; width: 90%; padding: 25px; border-radius: var(--radius-lg); position: relative;">
+      <button class="modal-close-btn" id="close-detail-modal-btn" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 18px; color: var(--text-secondary); cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+      
+      <h3 style="margin-top: 0; margin-bottom: 20px; font-family: var(--font-secondary); font-size: 18px; font-weight: 700; color: var(--text-primary);"><i class="fa-solid fa-circle-info" style="color: var(--primary-color); margin-right: 8px;"></i> Record Details</h3>
+      
+      <div class="detail-modal-content" id="detail-modal-content" style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 25px;">
+        <!-- Filled dynamically -->
+      </div>
+      
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button id="delete-record-confirm-btn" class="btn-submit" style="background: var(--danger-color); padding: 10px 16px; font-weight: 600; font-size: 13px;"><i class="fa-regular fa-trash-can"></i> Delete Record</button>
+        <button id="cancel-detail-modal-btn" class="btn-submit" style="background: rgba(100, 116, 139, 0.1); color: var(--text-primary); border: 1px solid var(--border-color); padding: 10px 16px; font-weight: 600; font-size: 13px;">Close</button>
+      </div>
+    </div>
+  </div>
 
   <!-- JS Logic -->
   <script type="module" src="app.js"></script>

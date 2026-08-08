@@ -123,6 +123,12 @@ let chats = [];
 let currentUser = null;
 let currentProfile = null;
 let chatSubscription = null;
+let detailModal = null;
+let closeDetailModalBtn = null;
+let cancelDetailModalBtn = null;
+let deleteRecordConfirmBtn = null;
+let detailModalContent = null;
+let activeRecordToDelete = null; // { id, type: 'transaction' | 'funding' }
 
 // Category metadata config (can be customized by user)
 let CATEGORY_META = {
@@ -302,6 +308,13 @@ function initializeDOMElements() {
   debtReminderBanner = document.getElementById('debt-reminder-banner');
   debtReminderText = document.getElementById('debt-reminder-text');
   goToDebtsBtn = document.getElementById('go-to-debts-btn');
+
+  // Detail Modal Elements
+  detailModal = document.getElementById('detail-modal');
+  closeDetailModalBtn = document.getElementById('close-detail-modal-btn');
+  cancelDetailModalBtn = document.getElementById('cancel-detail-modal-btn');
+  deleteRecordConfirmBtn = document.getElementById('delete-record-confirm-btn');
+  detailModalContent = document.getElementById('detail-modal-content');
 }
 
 let isSignUpMode = false;
@@ -378,6 +391,11 @@ function init() {
   if (addDebtForm) addDebtForm.addEventListener('submit', handleAddDebt);
   if (toggleSettledHistoryBtn) toggleSettledHistoryBtn.addEventListener('click', toggleSettledHistory);
   if (goToDebtsBtn) goToDebtsBtn.addEventListener('click', () => switchTab('udhaar-view'));
+
+  // Listeners: Record Details Modal
+  if (closeDetailModalBtn) closeDetailModalBtn.addEventListener('click', closeDetailModal);
+  if (cancelDetailModalBtn) cancelDetailModalBtn.addEventListener('click', closeDetailModal);
+  if (deleteRecordConfirmBtn) deleteRecordConfirmBtn.addEventListener('click', handleConfirmDeleteRecord);
 
   // Listeners: Calendar
   if (calPrevBtn) calPrevBtn.addEventListener('click', () => changeMonth(-1));
@@ -1178,12 +1196,23 @@ function renderTransactionsTable() {
         </button>
       </td>
     `;
+    
+    // Open details on row click (excluding direct clicks on delete action button)
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.delete-tx-btn')) return;
+      showRecordDetails(tx, 'transaction');
+    });
+
     transactionRows.appendChild(row);
   });
 
-  // Attach delete listeners dynamically
+  // Attach delete listeners dynamically (for desktop view)
   document.querySelectorAll('.delete-tx-btn').forEach(btn => {
-    btn.addEventListener('click', () => deleteTransaction(btn.getAttribute('data-id')));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteTransaction(btn.getAttribute('data-id'));
+    });
   });
 }
 
@@ -1376,12 +1405,23 @@ function renderPaymentsTable() {
         </button>
       </td>
     `;
+
+    // Open details on row click
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.delete-funding-btn')) return;
+      showRecordDetails(pay, 'funding');
+    });
+
     paymentRows.appendChild(row);
   });
 
-  // Attach delete listener dynamically
+  // Attach delete listener dynamically (for desktop view)
   document.querySelectorAll('.delete-funding-btn').forEach(btn => {
-    btn.addEventListener('click', () => deleteFunding(btn.getAttribute('data-id')));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteFunding(btn.getAttribute('data-id'));
+    });
   });
 }
 
@@ -1533,12 +1573,23 @@ function renderDetailedTransactions() {
         </button>
       </td>
     `;
+
+    // Open details on row click
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', (e) => {
+      if (e.target.closest('.delete-tx-detailed-btn')) return;
+      showRecordDetails(tx, 'transaction');
+    });
+
     detailedTransactionRows.appendChild(row);
   });
 
-  // Attach listeners
+  // Attach listeners (for desktop view)
   document.querySelectorAll('.delete-tx-detailed-btn').forEach(btn => {
-    btn.addEventListener('click', () => deleteTransaction(btn.getAttribute('data-id')));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteTransaction(btn.getAttribute('data-id'));
+    });
   });
 }
 
@@ -2736,6 +2787,107 @@ function switchTab(tabId) {
   const targetItem = Array.from(menuItems).find(item => item.getAttribute('data-tab') === tabId);
   if (targetItem) {
     targetItem.click();
+  }
+}
+
+// --- RECORD DETAILS MODAL LOGIC ---
+
+function showRecordDetails(record, type) {
+  if (!detailModal || !detailModalContent) return;
+  
+  activeRecordToDelete = { id: record.id, type: type };
+  
+  const dateFormatted = new Date(record.date).toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
+  let contentHtml = '';
+  
+  if (type === 'transaction') {
+    const meta = CATEGORY_META[record.category] || { name: 'Other', color: '#64748b' };
+    contentHtml = `
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); font-weight: 600;">Transaction Name</span>
+        <span style="font-size: 18px; font-weight: 700; color: var(--text-primary); text-transform: capitalize;">${escapeHTML(record.item)}</span>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 5px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Category</span>
+          <span class="category-badge ${record.category}" style="display: inline-flex; align-self: flex-start;">
+            ${meta.name}
+          </span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Amount</span>
+          <span style="font-size: 16px; font-weight: 700; color: var(--danger-color);">${formatPKR(record.amount)}</span>
+        </div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 5px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+        <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Transaction Date</span>
+        <span style="font-size: 13px; color: var(--text-primary); font-weight: 500;">${dateFormatted}</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 5px;">
+        <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Record ID</span>
+        <span style="font-family: monospace; font-size: 10px; color: var(--text-secondary); word-break: break-all;">${record.id}</span>
+      </div>
+    `;
+  } else if (type === 'funding') {
+    contentHtml = `
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); font-weight: 600;">Funding Provided By</span>
+        <span style="font-size: 18px; font-weight: 700; color: var(--text-primary); text-transform: capitalize;">${escapeHTML(record.source || record.funder_name || record.item)}</span>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 5px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Type</span>
+          <span style="background: rgba(16, 185, 129, 0.1); color: var(--success-color); padding: 4px 8px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; align-self: flex-start; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-arrow-down-left"></i> Received</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Amount</span>
+          <span style="font-size: 16px; font-weight: 700; color: var(--success-color);">+${formatPKR(record.amount)}</span>
+        </div>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 5px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+        <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Deposit Date</span>
+        <span style="font-size: 13px; color: var(--text-primary); font-weight: 500;">${dateFormatted}</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 5px;">
+        <span style="font-size: 11px; color: var(--text-secondary); font-weight: 600;">Record ID</span>
+        <span style="font-family: monospace; font-size: 10px; color: var(--text-secondary); word-break: break-all;">${record.id}</span>
+      </div>
+    `;
+  }
+
+  detailModalContent.innerHTML = contentHtml;
+  detailModal.classList.remove('hidden');
+}
+
+function closeDetailModal() {
+  if (detailModal) {
+    detailModal.classList.add('hidden');
+  }
+  activeRecordToDelete = null;
+}
+
+async function handleConfirmDeleteRecord() {
+  if (!activeRecordToDelete) return;
+  
+  const { id, type } = activeRecordToDelete;
+  closeDetailModal();
+  
+  if (type === 'transaction') {
+    await deleteTransaction(id);
+  } else if (type === 'funding') {
+    await deleteFunding(id);
   }
 }
 
