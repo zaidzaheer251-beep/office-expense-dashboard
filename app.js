@@ -481,6 +481,8 @@ function setupNavigation() {
     });
   }
   
+  const bottomNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+
   menuItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
@@ -491,6 +493,11 @@ function setupNavigation() {
       // Update active sidebar item
       menuItems.forEach(i => i.classList.remove('active'));
       item.classList.add('active');
+
+      // Update active bottom nav item
+      bottomNavItems.forEach(i => i.classList.remove('active'));
+      const matchingBottomItem = Array.from(bottomNavItems).find(i => i.getAttribute('data-tab') === tabId);
+      if (matchingBottomItem) matchingBottomItem.classList.add('active');
       
       // Update active view
       const tabViews = document.querySelectorAll('.tab-view');
@@ -518,9 +525,6 @@ function setupNavigation() {
           renderDetailedTransactions();
         } else if (tabId === 'payments-view') {
           renderPaymentsTable();
-        } else if (tabId === 'support-view') {
-          renderChats();
-          chatFeed.scrollTop = chatFeed.scrollHeight;
         } else if (tabId === 'reports-view') {
           renderReportsTab();
         } else if (tabId === 'calendar-view') {
@@ -528,6 +532,20 @@ function setupNavigation() {
         } else if (tabId === 'udhaar-view') {
           renderDebtsTab();
         }
+      }
+    });
+  });
+
+  // Handle bottom navigation clicks by forwarding to sidebar click
+  bottomNavItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const tabId = item.getAttribute('data-tab');
+      if (!tabId) return;
+
+      const matchingSidebarItem = Array.from(menuItems).find(i => i.getAttribute('data-tab') === tabId);
+      if (matchingSidebarItem) {
+        matchingSidebarItem.click();
       }
     });
   });

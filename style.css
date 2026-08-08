@@ -1470,6 +1470,68 @@ body {
   display: none !important;
 }
 
+/* Mobile Bottom Navigation Bar Styles */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-color);
+  display: none; /* Hidden on desktop */
+  justify-content: space-around;
+  align-items: center;
+  z-index: 9999;
+  padding: 0 10px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-bottom-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  flex: 1;
+  height: 100%;
+  transition: all 0.2s ease;
+  padding: 8px 0;
+}
+
+.mobile-bottom-nav .nav-item i {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.mobile-bottom-nav .nav-item:hover i,
+.mobile-bottom-nav .nav-item.active i {
+  transform: translateY(-2px);
+}
+
+.mobile-bottom-nav .nav-item.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Show bottom nav on mobile/tablets & add bottom padding to view container */
+@media (max-width: 992px) {
+  .mobile-bottom-nav {
+    display: flex;
+  }
+  .main-content {
+    padding-bottom: 90px !important; /* Prevent bottom nav overlapping content */
+  }
+}
+
 /* Settings Page Responsiveness */
 @media (max-width: 768px) {
   .settings-page-container {
