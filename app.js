@@ -67,6 +67,26 @@ function saveLocalDebts() {
   safeStorage.setItem(key, JSON.stringify(debts));
 }
 
+const USER_SEPTEMBER_TRANSACTIONS = [
+  { id: 'tx-sept-01', date: '2026-09-09', item: 'Milk', category: 'milk', amount: 200 },
+  { id: 'tx-sept-02', date: '2026-09-10', item: 'Burger', category: 'food', amount: 440 },
+  { id: 'tx-sept-03', date: '2026-09-10', item: 'Milk', category: 'milk', amount: 150 },
+  { id: 'tx-sept-04', date: '2026-09-11', item: 'Tea', category: 'tea-sugar', amount: 100 },
+  { id: 'tx-sept-05', date: '2026-09-12', item: 'Snacks', category: 'snacks', amount: 160 },
+  { id: 'tx-sept-06', date: '2026-09-12', item: 'Milk', category: 'milk', amount: 100 },
+  { id: 'tx-sept-07', date: '2026-09-12', item: 'Corn', category: 'snacks', amount: 100 },
+  { id: 'tx-sept-08', date: '2026-09-13', item: 'Tea', category: 'tea-sugar', amount: 150 },
+  { id: 'tx-sept-09', date: '2026-09-13', item: 'Fries', category: 'snacks', amount: 200 },
+  { id: 'tx-sept-10', date: '2026-09-14', item: 'Milk', category: 'milk', amount: 150 },
+  { id: 'tx-sept-11', date: '2026-09-15', item: 'Gool Gupy', category: 'snacks', amount: 100 },
+  { id: 'tx-sept-12', date: '2026-09-15', item: 'Snacks', category: 'snacks', amount: 100 },
+  { id: 'tx-sept-13', date: '2026-09-16', item: 'Milk', category: 'milk', amount: 170 },
+  { id: 'tx-sept-14', date: '2026-09-17', item: 'Milk', category: 'milk', amount: 150 },
+  { id: 'tx-sept-15', date: '2026-09-18', item: 'Tea', category: 'tea-sugar', amount: 150 },
+  { id: 'tx-sept-16', date: '2026-09-19', item: 'Tea', category: 'tea-sugar', amount: 150 },
+  { id: 'tx-sept-17', date: '2026-09-20', item: 'Tea', category: 'tea-sugar', amount: 100 }
+];
+
 function loginLocally(email, username) {
   isDemoMode = true;
   
@@ -154,6 +174,14 @@ function loginLocally(email, username) {
       const isSeedSource = f.source === "Initial Funding Deposit" || f.source === "Mid-month Topup";
       return !(isSeedId || isSeedSource);
     });
+
+    // Add user's real September transactions
+    if (!safeStorage.getItem('september_real_expenses_synced_v1')) {
+      const existingIds = new Set(transactions.map(t => t.id));
+      const itemsToAdd = USER_SEPTEMBER_TRANSACTIONS.filter(t => !existingIds.has(t.id));
+      transactions = [...itemsToAdd, ...transactions];
+      safeStorage.setItem('september_real_expenses_synced_v1', 'true');
+    }
     
     saveLocalTransactions();
     saveLocalFunding();
