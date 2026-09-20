@@ -213,6 +213,13 @@
             </select>
           </div>
           
+          <!-- Month Selector -->
+          <div class="month-selector-wrapper" style="margin-right: 5px;">
+            <select id="active-month-select" class="form-control" style="min-width: 140px; padding: 6px 12px; font-size: 13px; font-weight: 600; border-radius: 8px; height: 38px; cursor: pointer; background-color: var(--card-bg); color: var(--text-primary); border: 1px solid var(--border-color);">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+          
           <!-- Theme Toggle -->
           <button class="theme-toggle-btn" id="theme-toggle" title="Toggle Theme">
             <i class="fa-solid fa-moon"></i>
@@ -667,6 +674,30 @@
             </div>
             <div class="insights-container" id="financial-insights-box">
               <!-- Dynamically populated insights -->
+            </div>
+          </div>
+
+          <!-- Monthly Report Generator Widget -->
+          <div class="card-widget" style="grid-column: 1 / -1; margin-top: 20px;">
+            <div class="card-header">
+              <h3>Monthly Report Generator</h3>
+            </div>
+            <div class="add-expense-form" style="display: flex; flex-direction: row; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+              <div class="form-group" style="flex: 1; min-width: 200px;">
+                <label for="report-month-select">Select Month</label>
+                <select id="report-month-select" class="form-control">
+                  <!-- Dynamically populated -->
+                </select>
+              </div>
+              
+              <div class="form-group" style="flex: 1; min-width: 200px;">
+                <label for="report-prepared-by">Prepared By</label>
+                <input type="text" id="report-prepared-by" class="form-control" value="Aamir Computer">
+              </div>
+              
+              <button class="btn-submit" id="generate-monthly-report-btn" style="padding: 11px 24px; font-size: 13px; height: fit-content; display: inline-flex; align-items: center; gap: 8px; background: var(--primary-gradient); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; box-shadow: var(--shadow-md);">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Generate Monthly PDF
+              </button>
             </div>
           </div>
         </section>

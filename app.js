@@ -46,11 +46,120 @@ try {
     }
   });
 } catch (e) {
-  alert("Database connection error: " + e.message);
+  console.warn("Database connection notice: " + e.message);
 }
 
 let isDemoMode = false;
 let debts = [];
+
+function saveLocalTransactions() {
+  const key = 'local_transactions_' + (currentUser ? currentUser.id : 'default');
+  safeStorage.setItem(key, JSON.stringify(transactions));
+}
+
+function saveLocalFunding() {
+  const key = 'local_funding_' + (currentUser ? currentUser.id : 'default');
+  safeStorage.setItem(key, JSON.stringify(fundingHistory));
+}
+
+function saveLocalDebts() {
+  const key = 'local_debts_' + (currentUser ? currentUser.id : 'default');
+  safeStorage.setItem(key, JSON.stringify(debts));
+}
+
+function loginLocally(email, username) {
+  isDemoMode = true;
+  
+  const cleanEmail = email || 'user@approx.com';
+  const cleanUsername = username || cleanEmail.split('@')[0] || 'Office Manager';
+  
+  const userObj = {
+    id: 'local-' + cleanEmail.replace(/[^a-zA-Z0-9]/g, '_'),
+    email: cleanEmail
+  };
+  
+  const profileObj = {
+    username: cleanUsername,
+    role: 'admin',
+    avatar_url: ''
+  };
+  
+  currentUser = userObj;
+  currentProfile = profileObj;
+  
+  // Persist session to local storage so user stays logged in across page refreshes
+  safeStorage.setItem('active_local_session', JSON.stringify({
+    user: userObj,
+    profile: profileObj
+  }));
+  
+  // Update header UI display
+  const userDisplayName = document.getElementById('user-display-name');
+  const userDisplayRole = document.getElementById('user-display-role');
+  if (userDisplayName) userDisplayName.textContent = currentProfile.username;
+  if (userDisplayRole) userDisplayRole.textContent = 'Admin (Local)';
+  
+  // Load saved transactions or seed dynamic data
+  const savedTxs = safeStorage.getItem('local_transactions_' + currentUser.id) || safeStorage.getItem('demo_transactions');
+  if (savedTxs) {
+    try {
+      transactions = JSON.parse(savedTxs);
+    } catch (e) {
+      makeInitialDataDynamic();
+      transactions = JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS));
+    }
+  } else {
+    makeInitialDataDynamic();
+    transactions = JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS)).map((tx, idx) => ({
+      id: 'tx-local-' + idx,
+      ...tx
+    }));
+    saveLocalTransactions();
+  }
+  
+  // Load saved funding
+  const savedFunding = safeStorage.getItem('local_funding_' + currentUser.id) || safeStorage.getItem('demo_funding');
+  if (savedFunding) {
+    try {
+      fundingHistory = JSON.parse(savedFunding);
+    } catch (e) {
+      fundingHistory = JSON.parse(JSON.stringify(INITIAL_FUNDING));
+    }
+  } else {
+    fundingHistory = JSON.parse(JSON.stringify(INITIAL_FUNDING)).map((f, idx) => ({
+      id: 'fund-local-' + idx,
+      ...f
+    }));
+    saveLocalFunding();
+  }
+  
+  // Load saved debts
+  const savedDebts = safeStorage.getItem('local_debts_' + currentUser.id);
+  if (savedDebts) {
+    try {
+      debts = JSON.parse(savedDebts);
+    } catch (e) {
+      debts = [];
+    }
+  } else {
+    debts = [];
+  }
+  
+  chats = [
+    { sender: 'Support Agent Az', text: 'Hello! Welcome to Approx Expense. All your entries are safely saved on this device in offline mode.', time: '12:00 PM', type: 'incoming' }
+  ];
+  
+  // Update default currency limits
+  updateMonthlyLimitFromCurrency();
+  
+  // Switch view containers
+  const authContainer = document.getElementById('auth-container');
+  const appContainer = document.getElementById('app-container');
+  if (authContainer) authContainer.classList.add('hidden');
+  if (appContainer) appContainer.classList.remove('hidden');
+  
+  renderAll();
+}
 
 // 2. Default Seed Data (Pre-populates database if empty)
 const INITIAL_TRANSACTIONS = [
@@ -230,7 +339,8 @@ let transactionRows, categoryFilter, reportFilter, categoryListContainer, budget
 let paymentRows, addFundingForm;
 let detailedTransactionRows, advCategoryFilter, advSortFilter, advStartDate, advEndDate, resetFiltersBtn, exportCsvBtn, filteredStatsText;
 let chatFeed, chatForm, chatInput;
-let financialInsightsBox;
+let financialInsightsBox, reportMonthSelect, reportPreparedBy, generateMonthlyReportBtn, activeMonthSelect;
+let currentSelectedMonth = new Date().toISOString().substring(0, 7);
 let calendarCells, calendarMonthYear, calPrevBtn, calNextBtn;
 let authForm, authTitle, authSubtitle, authSubmitBtn, authToggleLink, authToggleText, authUsernameGroup, authUsername, authEmail, authPassword, logoutBtn, userDisplayName, userDisplayRole;
 
@@ -277,6 +387,10 @@ function initializeDOMElements() {
   chatInput = document.getElementById('chat-input');
   
   financialInsightsBox = document.getElementById('financial-insights-box');
+  reportMonthSelect = document.getElementById('report-month-select');
+  reportPreparedBy = document.getElementById('report-prepared-by');
+  generateMonthlyReportBtn = document.getElementById('generate-monthly-report-btn');
+  activeMonthSelect = document.getElementById('active-month-select');
   
   calendarCells = document.getElementById('calendar-cells');
   calendarMonthYear = document.getElementById('calendar-month-year');
@@ -367,11 +481,20 @@ function init() {
     });
   }
 
+  if (activeMonthSelect) {
+    activeMonthSelect.addEventListener('change', (e) => {
+      currentSelectedMonth = e.target.value;
+      updateMonthlyLimitFromCurrency();
+      renderAll();
+    });
+  }
+
   themeToggleBtn.addEventListener('click', toggleTheme);
   
   // Listeners: Reports Export
   const downloadPdfBtn = document.getElementById('download-pdf-btn');
   if (downloadPdfBtn) downloadPdfBtn.addEventListener('click', downloadPDFReport);
+  if (generateMonthlyReportBtn) generateMonthlyReportBtn.addEventListener('click', downloadMonthlyPDFReport);
 
   // Listeners: Payments
   if (addFundingForm) addFundingForm.addEventListener('submit', handleAddFunding);
@@ -401,64 +524,14 @@ function init() {
   if (calPrevBtn) calPrevBtn.addEventListener('click', () => changeMonth(-1));
   if (calNextBtn) calNextBtn.addEventListener('click', () => changeMonth(1));
 
-
-  // Set up in-memory temporary demo button
+  // Set up demo button
   const demoBtn = document.getElementById('demo-mode-btn');
   if (demoBtn) {
     demoBtn.addEventListener('click', () => {
       try {
-        isDemoMode = true;
-        
-        currentUser = {
-          id: 'demo-user-id',
-          email: 'demo@approx.com'
-        };
-        
-        currentProfile = {
-          username: 'Demo Client',
-          role: 'admin',
-          avatar_url: ''
-        };
-        
-        // Shift INITIAL_TRANSACTIONS and INITIAL_FUNDING dates to the current month
-        makeInitialDataDynamic();
-        
-        // Load copies into memory
-        transactions = JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS)).map((tx, idx) => ({
-          id: 'tx-demo-' + idx,
-          ...tx
-        }));
-        
-        fundingHistory = JSON.parse(JSON.stringify(INITIAL_FUNDING)).map((f, idx) => ({
-          id: 'fund-demo-' + idx,
-          ...f
-        }));
-        
-        chats = [
-          { sender: 'Support Agent Az', text: 'Hello! Welcome to Approx Live Support Helpdesk. How can I assist you with your office expenses today?', time: '12:00 PM', type: 'incoming' },
-          { sender: 'Demo Client', text: 'Hi, I am testing the demo mode of the dashboard.', time: '12:01 PM', type: 'outgoing' },
-          { sender: 'Support Agent Az', text: 'Great! You can add/delete expenses, view reports, or test calculations. Everything works in-memory!', time: '12:02 PM', type: 'incoming' }
-        ];
-        
-        // Update display details
-        const userDisplayName = document.getElementById('user-display-name');
-        const userDisplayRole = document.getElementById('user-display-role');
-        if (userDisplayName) userDisplayName.textContent = currentProfile.username;
-        if (userDisplayRole) userDisplayRole.textContent = 'Admin';
-        
-        // Update default currency limits
-        updateMonthlyLimitFromCurrency();
-        
-        // Switch view containers
-        const authContainer = document.getElementById('auth-container');
-        const appContainer = document.getElementById('app-container');
-        if (authContainer) authContainer.classList.add('hidden');
-        if (appContainer) appContainer.classList.remove('hidden');
-        
-        // Render components
-        renderAll();
+        loginLocally('demo@approx.com', 'Demo Client');
       } catch (err) {
-        alert("Demo Mode Init Error: " + err.message + "\n\nStack:\n" + err.stack);
+        alert("Demo Mode Init Error: " + err.message);
       }
     });
   }
@@ -749,6 +822,25 @@ function setupAuthListeners() {
           if (error) throw error;
         }
       } catch (err) {
+        const isNetworkErr = err && err.message && (
+          err.message.includes('Failed to fetch') || 
+          err.message.includes('NetworkError') || 
+          err.message.includes('fetch') ||
+          err.message.includes('network') ||
+          err.message.includes('Failed to load')
+        );
+
+        if (isNetworkErr) {
+          alert(
+            "⚠️ Cloud Database Notice:\n\n" +
+            "The Supabase database project is currently offline or paused.\n\n" +
+            "Logging you in seamlessly using Local Storage Mode as '" + (email || 'Admin') + "'!\n" +
+            "All expenses, calculations, and reports are fully functional and saved on this device."
+          );
+          loginLocally(email, username);
+          return;
+        }
+
         alert(err.message || 'Authentication error');
       } finally {
         authSubmitBtn.disabled = false;
@@ -766,12 +858,16 @@ function setupAuthListeners() {
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
       if (confirm('Are you sure you want to log out?')) {
-        if (isDemoMode) {
-          isDemoMode = false;
-          window.location.reload();
-        } else {
-          await supabase.auth.signOut();
+        safeStorage.removeItem('active_local_session');
+        isDemoMode = false;
+        try {
+          if (supabase && supabase.auth) {
+            await supabase.auth.signOut();
+          }
+        } catch (e) {
+          console.warn("Sign out notice:", e);
         }
+        window.location.reload();
       }
     });
   }
@@ -783,6 +879,20 @@ async function checkSession() {
   if (window.location.hash && window.location.hash.includes('type=recovery')) {
     if (window.triggerUpdatePasswordMode) {
       window.triggerUpdatePasswordMode();
+    }
+  }
+
+  // 1. Check if an offline/local session is active
+  const activeLocalSession = safeStorage.getItem('active_local_session');
+  if (activeLocalSession) {
+    try {
+      const parsed = JSON.parse(activeLocalSession);
+      if (parsed && parsed.user) {
+        loginLocally(parsed.user.email, parsed.profile?.username);
+        return;
+      }
+    } catch (e) {
+      console.warn("Could not parse active_local_session:", e);
     }
   }
 
@@ -1002,9 +1112,109 @@ function subscribeChats() {
 }
 
 // Calculations
+function getAvailableMonths() {
+  const monthSet = new Set();
+  const today = new Date();
+  const currentMonthStr = today.toISOString().substring(0, 7);
+  monthSet.add(currentMonthStr);
+  
+  // Include past 6 months and next 1 month
+  for (let i = -1; i <= 6; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    monthSet.add(d.toISOString().substring(0, 7));
+  }
+
+  if (Array.isArray(transactions)) {
+    transactions.forEach(tx => {
+      if (tx.date && tx.date.length >= 7) {
+        monthSet.add(tx.date.substring(0, 7));
+      }
+    });
+  }
+
+  if (Array.isArray(fundingHistory)) {
+    fundingHistory.forEach(f => {
+      if (f.date && f.date.length >= 7) {
+        monthSet.add(f.date.substring(0, 7));
+      }
+    });
+  }
+
+  return Array.from(monthSet).sort().reverse();
+}
+
+function formatMonthLabel(monthStr) {
+  if (!monthStr || monthStr === 'all') return 'All Months (Lifetime)';
+  const parts = monthStr.split('-');
+  if (parts.length < 2) return monthStr;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10);
+  const date = new Date(year, month - 1, 1);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function populateActiveMonthDropdown() {
+  const el = document.getElementById('active-month-select');
+  if (!el) return;
+  const months = getAvailableMonths();
+  const currentVal = currentSelectedMonth;
+  
+  const existingValues = Array.from(el.options).map(o => o.value);
+  const targetValues = ['all', ...months];
+  
+  if (existingValues.join(',') !== targetValues.join(',')) {
+    el.innerHTML = '';
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = '📅 All Months';
+    el.appendChild(allOption);
+    
+    months.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = '📅 ' + formatMonthLabel(m);
+      el.appendChild(opt);
+    });
+  }
+  
+  el.value = currentVal;
+}
+
+function populateReportMonths() {
+  const el = document.getElementById('report-month-select');
+  if (!el) return;
+  const months = getAvailableMonths();
+  const currentVal = el.value || currentSelectedMonth;
+  
+  const existingValues = Array.from(el.options).map(o => o.value);
+  if (existingValues.join(',') !== months.join(',')) {
+    el.innerHTML = '';
+    months.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = formatMonthLabel(m);
+      el.appendChild(opt);
+    });
+  }
+  
+  if (currentVal && months.includes(currentVal)) {
+    el.value = currentVal;
+  } else if (months.length > 0) {
+    el.value = months[0];
+  }
+}
+
 function calculateTotals() {
-  const totalSpent = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-  const totalReceived = fundingHistory.reduce((sum, pay) => sum + parseFloat(pay.amount || 0), 0);
+  const filteredTxs = currentSelectedMonth && currentSelectedMonth !== 'all'
+    ? transactions.filter(tx => tx.date && tx.date.startsWith(currentSelectedMonth))
+    : transactions;
+    
+  const filteredFunding = currentSelectedMonth && currentSelectedMonth !== 'all'
+    ? fundingHistory.filter(f => f.date && f.date.startsWith(currentSelectedMonth))
+    : fundingHistory;
+
+  const totalSpent = filteredTxs.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+  const totalReceived = filteredFunding.reduce((sum, pay) => sum + parseFloat(pay.amount || 0), 0);
   const remaining = monthlyLimit - totalSpent;
   const balance = totalReceived - totalSpent;
   
@@ -1045,12 +1255,17 @@ const DEFAULT_LIMITS = {
 
 function updateMonthlyLimitFromCurrency() {
   const userId = currentUser ? currentUser.id : 'default';
-  const key = `office_limit_${currentCurrency}_${userId}`;
-  let savedLimit = safeStorage.getItem(key);
+  const monthKey = `office_limit_${currentCurrency}_${userId}_${currentSelectedMonth}`;
+  const baseKey = `office_limit_${currentCurrency}_${userId}`;
+  let savedLimit = safeStorage.getItem(monthKey);
+  
+  if (!savedLimit) {
+    savedLimit = safeStorage.getItem(baseKey);
+  }
   
   if (!savedLimit) {
     savedLimit = DEFAULT_LIMITS[currentCurrency] || 100;
-    safeStorage.setItem(key, savedLimit.toString());
+    safeStorage.setItem(baseKey, savedLimit.toString());
   }
   
   monthlyLimit = toBaseCurrency(parseFloat(savedLimit));
@@ -1099,6 +1314,8 @@ function updateInputLabels() {
 
 // Render All Components
 function renderAll() {
+  populateActiveMonthDropdown();
+  populateReportMonths();
   renderMetrics();
   renderTransactionsTable();
   renderCategoryList();
@@ -1150,9 +1367,10 @@ function renderTransactionsTable() {
   const catFilter = categoryFilter.value;
   
   const filtered = transactions.filter(tx => {
+    const matchesMonth = !currentSelectedMonth || currentSelectedMonth === 'all' || (tx.date && tx.date.startsWith(currentSelectedMonth));
     const matchesSearch = tx.item.toLowerCase().includes(query) || tx.date.includes(query);
     const matchesCategory = catFilter === 'all' || tx.category === catFilter;
-    return matchesSearch && matchesCategory;
+    return matchesMonth && matchesSearch && matchesCategory;
   });
   
   // Show last 5 recent transactions on dashboard
@@ -1165,7 +1383,7 @@ function renderTransactionsTable() {
     transactionRows.innerHTML = `
       <tr>
         <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 30px;">
-          No transactions registered.
+          No transactions registered for this period.
         </td>
       </tr>
     `;
@@ -1221,6 +1439,7 @@ async function deleteTransaction(id) {
   if (confirm("Are you sure you want to delete this expense record?")) {
     if (isDemoMode) {
       transactions = transactions.filter(tx => tx.id !== id);
+      saveLocalTransactions();
       renderAll();
       return;
     }
@@ -1246,7 +1465,11 @@ function renderCategoryList() {
   const catSums = {};
   Object.keys(CATEGORY_META).forEach(k => catSums[k] = 0);
   
-  transactions.forEach(tx => {
+  const filteredTxs = currentSelectedMonth && currentSelectedMonth !== 'all'
+    ? transactions.filter(tx => tx.date && tx.date.startsWith(currentSelectedMonth))
+    : transactions;
+
+  filteredTxs.forEach(tx => {
     const cat = tx.category || 'other';
     if (catSums[cat] !== undefined) catSums[cat] += parseFloat(tx.amount);
     else catSums['other'] += parseFloat(tx.amount);
@@ -1281,8 +1504,11 @@ function renderCharts() {
   // Line / Bar Chart (Daily expenses)
   const ctx = document.getElementById('expenseReportChart')?.getContext('2d');
   if (ctx) {
+    const chartTxs = currentSelectedMonth && currentSelectedMonth !== 'all'
+      ? transactions.filter(tx => tx.date && tx.date.startsWith(currentSelectedMonth))
+      : transactions;
     const dailyTotals = {};
-    transactions.forEach(tx => {
+    chartTxs.forEach(tx => {
       dailyTotals[tx.date] = (dailyTotals[tx.date] || 0) + parseFloat(tx.amount);
     });
     
@@ -1384,8 +1610,23 @@ function renderPaymentsTable() {
   
   paymentRows.innerHTML = '';
   
+  const filteredFunding = currentSelectedMonth && currentSelectedMonth !== 'all'
+    ? fundingHistory.filter(f => f.date && f.date.startsWith(currentSelectedMonth))
+    : fundingHistory;
+
   // Sort by date descending
-  const sortedFunding = [...fundingHistory].sort((a,b) => new Date(b.date) - new Date(a.date));
+  const sortedFunding = [...filteredFunding].sort((a,b) => new Date(b.date) - new Date(a.date));
+  
+  if (sortedFunding.length === 0) {
+    paymentRows.innerHTML = `
+      <tr>
+        <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 30px;">
+          No funding records registered for this period.
+        </td>
+      </tr>
+    `;
+    return;
+  }
   
   sortedFunding.forEach(pay => {
     const row = document.createElement('tr');
@@ -1452,15 +1693,25 @@ async function handleAddFunding(e) {
 
   if (isDemoMode) {
     const newFunding = {
-      id: 'fund-demo-' + Date.now(),
+      id: 'fund-local-' + Date.now(),
       source,
       date,
       amount: toBaseCurrency(amount)
     };
     fundingHistory.unshift(newFunding);
+    saveLocalFunding();
+    
+    // Switch to funding's month if different
+    const fundMonth = date.substring(0, 7);
+    if (currentSelectedMonth !== 'all' && currentSelectedMonth !== fundMonth) {
+      currentSelectedMonth = fundMonth;
+      updateMonthlyLimitFromCurrency();
+    }
+    
     sourceInput.value = '';
     amountInput.value = '';
     renderAll();
+    alert("Funding registered successfully!");
     return;
   }
 
@@ -1489,6 +1740,7 @@ async function deleteFunding(id) {
   if (confirm("Are you sure you want to delete this funding deposit record?")) {
     if (isDemoMode) {
       fundingHistory = fundingHistory.filter(f => f.id !== id);
+      saveLocalFunding();
       renderAll();
       return;
     }
@@ -1776,6 +2028,189 @@ async function downloadPDFReport() {
   }
 }
 
+async function downloadMonthlyPDFReport() {
+  const btn = document.getElementById('generate-monthly-report-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating PDF...';
+  }
+
+  try {
+    const selectedMonth = (reportMonthSelect && reportMonthSelect.value) ? reportMonthSelect.value : currentSelectedMonth;
+    const preparedBy = (reportPreparedBy && reportPreparedBy.value.trim()) ? reportPreparedBy.value.trim() : (currentProfile?.username || 'Aamir Computer');
+    const monthTitle = formatMonthLabel(selectedMonth);
+    const today = new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    // Filter transactions and funding for this month
+    const monthTxs = selectedMonth && selectedMonth !== 'all'
+      ? transactions.filter(tx => tx.date && tx.date.startsWith(selectedMonth))
+      : transactions;
+    const monthFunding = selectedMonth && selectedMonth !== 'all'
+      ? fundingHistory.filter(f => f.date && f.date.startsWith(selectedMonth))
+      : fundingHistory;
+
+    // Calculate month stats
+    const totalSpent = monthTxs.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+    const totalReceived = monthFunding.reduce((sum, f) => sum + parseFloat(f.amount || 0), 0);
+
+    const userId = currentUser ? currentUser.id : 'default';
+    const monthKey = `office_limit_${currentCurrency}_${userId}_${selectedMonth}`;
+    const baseKey = `office_limit_${currentCurrency}_${userId}`;
+    const savedLimit = safeStorage.getItem(monthKey) || safeStorage.getItem(baseKey) || DEFAULT_LIMITS[currentCurrency] || 100;
+    const reportLimit = toBaseCurrency(parseFloat(savedLimit));
+    const remaining = reportLimit - totalSpent;
+    const balance = totalReceived - totalSpent;
+
+    // Category breakdown
+    const catSums = {};
+    Object.keys(CATEGORY_META).forEach(k => catSums[k] = 0);
+    monthTxs.forEach(tx => {
+      const cat = tx.category || 'other';
+      if (catSums[cat] !== undefined) catSums[cat] += parseFloat(tx.amount);
+      else catSums['other'] += parseFloat(tx.amount);
+    });
+
+    let catRowsHtml = '';
+    Object.keys(catSums).forEach(k => {
+      if (catSums[k] > 0) {
+        const pct = reportLimit > 0 ? ((catSums[k] / reportLimit) * 100).toFixed(0) : 0;
+        catRowsHtml += `
+          <tr>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: 600;">${CATEGORY_META[k].name}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right;">${formatPKR(catSums[k])}</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #64748b;">${pct}% of Limit</td>
+          </tr>
+        `;
+      }
+    });
+
+    // Transactions table
+    let txRowsHtml = '';
+    const sortedTxs = [...monthTxs].sort((a,b) => new Date(b.date) - new Date(a.date));
+    sortedTxs.forEach(tx => {
+      const d = new Date(tx.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+      txRowsHtml += `
+        <tr>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-size: 11px; font-family: monospace; color: #64748b;">${(tx.id || '').substring(0, 8)}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 500;">${tx.item}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; text-transform: capitalize;"><span style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background-color: #f1f5f9; color: #475569;">${CATEGORY_META[tx.category]?.name.split(' ')[0] || tx.category}</span></td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-size: 11px; color: #64748b;">${d}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 600; color: #0f172a;">${formatPKR(tx.amount)}</td>
+        </tr>
+      `;
+    });
+
+    if (txRowsHtml === '') {
+      txRowsHtml = `<tr><td colspan="5" style="padding: 30px; text-align: center; color: #64748b;">No expense records found for ${monthTitle}.</td></tr>`;
+    }
+
+    const reportEl = document.createElement('div');
+    reportEl.style.padding = '40px';
+    reportEl.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
+    reportEl.style.color = '#0f172a';
+    reportEl.style.backgroundColor = '#ffffff';
+
+    reportEl.innerHTML = `
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #6366f1; padding-bottom: 20px; margin-bottom: 25px;">
+        <div>
+          <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #6366f1;">Approx Expense</h1>
+          <p style="margin: 4px 0 0 0; font-size: 15px; color: #0f172a; font-weight: 700;">Monthly Expense Report: ${monthTitle}</p>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-weight: 700; color: #6366f1; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; background-color: #f5f3ff; border-radius: 6px;">Official Statement</span>
+          <p style="margin: 6px 0 0 0; font-size: 12px; color: #64748b;">Prepared By: <strong>${preparedBy}</strong></p>
+          <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Generated: <strong>${today}</strong></p>
+        </div>
+      </div>
+
+      <!-- Key Figures -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px;">
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Received</span>
+          <div style="font-size: 18px; font-weight: 800; color: #10b981; margin-top: 4px;">${formatPKR(totalReceived)}</div>
+        </div>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Spent</span>
+          <div style="font-size: 18px; font-weight: 800; color: #ef4444; margin-top: 4px;">${formatPKR(totalSpent)}</div>
+        </div>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Monthly Limit</span>
+          <div style="font-size: 18px; font-weight: 800; color: #6366f1; margin-top: 4px;">${formatPKR(reportLimit)}</div>
+        </div>
+        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Closing Balance</span>
+          <div style="font-size: 18px; font-weight: 800; color: ${balance < 0 ? '#ef4444' : '#10b981'}; margin-top: 4px;">${formatPKR(balance)}</div>
+        </div>
+      </div>
+
+      <!-- Category Breakdown -->
+      <div style="margin-bottom: 30px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 10px; border-left: 4px solid #6366f1; padding-left: 8px;">Department / Category Expenses</h3>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+          <thead>
+            <tr style="background-color: #f8fafc;">
+              <th style="padding: 8px 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700; color: #475569;">Category</th>
+              <th style="padding: 8px 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700; color: #475569; text-align: right;">Amount</th>
+              <th style="padding: 8px 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700; color: #475569; text-align: right;">Limit Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${catRowsHtml || '<tr><td colspan="3" style="padding: 12px; text-align: center; color: #64748b;">No expenses categorized for this month.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Itemized Ledger -->
+      <div>
+        <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 10px; border-left: 4px solid #6366f1; padding-left: 8px;">Itemized Expense Ledger</h3>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+          <thead>
+            <tr style="background-color: #f8fafc; color: #475569;">
+              <th style="padding: 8px 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700;">ID</th>
+              <th style="padding: 8px 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700;">Item Description</th>
+              <th style="padding: 8px 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700;">Category</th>
+              <th style="padding: 8px 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700;">Date</th>
+              <th style="padding: 8px 10px; border-bottom: 2px solid #e2e8f0; font-weight: 700; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${txRowsHtml}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Sign-off -->
+      <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #e2e8f0; padding-top: 25px;">
+        <div style="font-size: 11px; color: #94a3b8;">
+          System-generated statement for internal accounting and audit records.
+        </div>
+        <div style="text-align: center; min-width: 150px; border-top: 1px solid #0f172a; padding-top: 5px;">
+          <span style="font-size: 12px; font-weight: 700; color: #0f172a;">${preparedBy}</span><br>
+          <span style="font-size: 10px; color: #64748b;">Authorized Signatory</span>
+        </div>
+      </div>
+    `;
+
+    const opt = {
+      margin:       [0.4, 0.4, 0.4, 0.4],
+      filename:     `Expense_Report_${selectedMonth || 'monthly'}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    await html2pdf().set(opt).from(reportEl).save();
+  } catch (err) {
+    alert("Failed to generate monthly PDF: " + err.message);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-file-invoice-dollar"></i> Generate Monthly PDF';
+    }
+  }
+}
+
 // 11. Chat View logic
 function renderChats() {
   if (!chatFeed) return;
@@ -1882,7 +2317,11 @@ function renderReportsTab() {
   const catSums = {};
   Object.keys(CATEGORY_META).forEach(k => catSums[k] = 0);
   
-  transactions.forEach(tx => {
+  const filteredTxs = currentSelectedMonth && currentSelectedMonth !== 'all'
+    ? transactions.filter(tx => tx.date && tx.date.startsWith(currentSelectedMonth))
+    : transactions;
+
+  filteredTxs.forEach(tx => {
     const cat = tx.category || 'other';
     if (catSums[cat] !== undefined) catSums[cat] += parseFloat(tx.amount);
     else catSums['other'] += parseFloat(tx.amount);
@@ -1921,8 +2360,9 @@ function renderReportsTab() {
   });
 
   // Insights
-  const highestCat = Object.entries(catSums).sort((a,b) => b[1] - a[1])[0];
+  const highestCat = Object.entries(catSums).sort((a,b) => b[1] - a[1])[0] || ['other', 0];
   const spentPct = totals.totalSpent > 0 ? ((highestCat[1] / totals.totalSpent) * 100).toFixed(1) : 0;
+  const monthName = formatMonthLabel(currentSelectedMonth);
   
   financialInsightsBox.innerHTML = `
     <div class="insight-card">
@@ -1951,7 +2391,7 @@ function renderReportsTab() {
       <div>
         <div class="insight-title">Average Daily Spend</div>
         <div class="insight-desc">
-          Your average daily spending in July is <strong>${formatPKR(totals.totalSpent / 30)}</strong>. At this rate, your estimated monthly total will be <strong>${formatPKR((totals.totalSpent / 25) * 30)}</strong>.
+          Your average daily spending in ${monthName} is <strong>${formatPKR(totals.totalSpent / 30)}</strong>. At this rate, your estimated monthly total will be <strong>${formatPKR((totals.totalSpent / 25) * 30)}</strong>.
         </div>
       </div>
     </div>
@@ -2358,14 +2798,23 @@ async function handleAddExpense(e) {
 
   if (isDemoMode) {
     const newTx = {
-      id: 'tx-demo-' + Date.now(),
+      id: 'tx-local-' + Date.now(),
       date,
       item,
       category,
       amount: toBaseCurrency(amount)
     };
     transactions.unshift(newTx);
-    alert("Expense registered successfully (Demo Mode)!");
+    saveLocalTransactions();
+    
+    // Auto switch active month if needed
+    const expMonth = date.substring(0, 7);
+    if (currentSelectedMonth !== 'all' && currentSelectedMonth !== expMonth) {
+      currentSelectedMonth = expMonth;
+      updateMonthlyLimitFromCurrency();
+    }
+    
+    alert("Expense registered successfully!");
     itemInput.value = '';
     amountInput.value = '';
     renderAll();
@@ -2398,18 +2847,23 @@ async function handleAddExpense(e) {
 function handleEditLimit(e) {
   e.preventDefault();
   const userId = currentUser ? currentUser.id : 'default';
-  const key = `office_limit_${currentCurrency}_${userId}`;
-  let currentLimitVal = parseFloat(safeStorage.getItem(key)) || DEFAULT_LIMITS[currentCurrency] || 100;
+  const monthKey = `office_limit_${currentCurrency}_${userId}_${currentSelectedMonth}`;
+  const baseKey = `office_limit_${currentCurrency}_${userId}`;
+  let currentLimitVal = parseFloat(safeStorage.getItem(monthKey)) || parseFloat(safeStorage.getItem(baseKey)) || DEFAULT_LIMITS[currentCurrency] || 100;
   
   const symbol = currentCurrency === 'USD' ? '$' : currentCurrency === 'GBP' ? '£' : 'PKR';
-  const newLimit = prompt(`Enter new budget limit in ${currentCurrency} (${symbol}):`, currentLimitVal);
+  const monthDisplay = currentSelectedMonth === 'all' ? 'All Months (General)' : formatMonthLabel(currentSelectedMonth);
+  const newLimit = prompt(`Enter budget limit for [${monthDisplay}] in ${currentCurrency} (${symbol}):`, currentLimitVal);
   if (newLimit === null) return;
   
   const val = parseFloat(newLimit);
   if (isNaN(val) || val <= 0) return;
   
-  // Save the manual limit in the active currency
-  safeStorage.setItem(key, val.toString());
+  // Save the manual limit in the active currency for current month and base
+  if (currentSelectedMonth && currentSelectedMonth !== 'all') {
+    safeStorage.setItem(monthKey, val.toString());
+  }
+  safeStorage.setItem(baseKey, val.toString());
   
   // Update global monthlyLimit (converted to PKR base)
   monthlyLimit = toBaseCurrency(val);
@@ -2496,9 +2950,10 @@ async function handleAddDebt(e) {
 
   if (isDemoMode) {
     // Save locally
-    newDebt.id = 'debt-demo-' + Date.now();
+    newDebt.id = 'debt-local-' + Date.now();
     newDebt.created_at = new Date().toISOString();
     debts.unshift(newDebt);
+    saveLocalDebts();
     
     // Clear form
     addDebtForm.reset();
@@ -2506,7 +2961,7 @@ async function handleAddDebt(e) {
     document.getElementById('debt-due-date').value = todayString;
     
     renderAll();
-    alert("Demo Mode: Debt entry added successfully in-memory!");
+    alert("Debt entry added successfully!");
     return;
   }
 
@@ -2555,8 +3010,9 @@ async function handleSettleDebt(id) {
     const idx = debts.findIndex(d => d.id === id);
     if (idx !== -1) {
       debts[idx].status = 'settled';
+      saveLocalDebts();
       renderAll();
-      alert("Demo Mode: Debt marked as settled!");
+      alert("Debt marked as settled!");
     }
     return;
   }
@@ -2584,8 +3040,9 @@ async function handleDeleteDebt(id) {
 
   if (isDemoMode) {
     debts = debts.filter(d => d.id !== id);
+    saveLocalDebts();
     renderAll();
-    alert("Demo Mode: Debt entry deleted!");
+    alert("Debt entry deleted successfully!");
     return;
   }
 
