@@ -99,37 +99,63 @@ function loginLocally(email, username) {
   if (userDisplayName) userDisplayName.textContent = currentProfile.username;
   if (userDisplayRole) userDisplayRole.textContent = 'Admin (Local)';
   
-  // Load saved transactions or seed dynamic data
-  const savedTxs = safeStorage.getItem('local_transactions_' + currentUser.id) || safeStorage.getItem('demo_transactions');
+  // Load saved transactions
+  const savedTxs = safeStorage.getItem('local_transactions_' + currentUser.id);
   if (savedTxs) {
     try {
       transactions = JSON.parse(savedTxs);
     } catch (e) {
-      makeInitialDataDynamic();
-      transactions = JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS));
+      transactions = [];
     }
   } else {
-    makeInitialDataDynamic();
-    transactions = JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS)).map((tx, idx) => ({
-      id: 'tx-local-' + idx,
-      ...tx
-    }));
+    if (cleanEmail === 'demo@approx.com') {
+      makeInitialDataDynamic();
+      transactions = JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS)).map((tx, idx) => ({
+        id: 'tx-local-' + idx,
+        ...tx
+      }));
+    } else {
+      transactions = [];
+    }
     saveLocalTransactions();
   }
   
   // Load saved funding
-  const savedFunding = safeStorage.getItem('local_funding_' + currentUser.id) || safeStorage.getItem('demo_funding');
+  const savedFunding = safeStorage.getItem('local_funding_' + currentUser.id);
   if (savedFunding) {
     try {
       fundingHistory = JSON.parse(savedFunding);
     } catch (e) {
-      fundingHistory = JSON.parse(JSON.stringify(INITIAL_FUNDING));
+      fundingHistory = [];
     }
   } else {
-    fundingHistory = JSON.parse(JSON.stringify(INITIAL_FUNDING)).map((f, idx) => ({
-      id: 'fund-local-' + idx,
-      ...f
-    }));
+    if (cleanEmail === 'demo@approx.com') {
+      fundingHistory = JSON.parse(JSON.stringify(INITIAL_FUNDING)).map((f, idx) => ({
+        id: 'fund-local-' + idx,
+        ...f
+      }));
+    } else {
+      fundingHistory = [];
+    }
+    saveLocalFunding();
+  }
+
+  // Purge any dummy seed items if this is a real user account
+  if (cleanEmail !== 'demo@approx.com') {
+    const seedItemNames = new Set(INITIAL_TRANSACTIONS.map(t => t.item));
+    transactions = transactions.filter(tx => {
+      const isSeedId = /^tx-(local|demo)-\d{1,2}$/.test(tx.id);
+      const isSeedItem = seedItemNames.has(tx.item);
+      return !(isSeedId || isSeedItem);
+    });
+    
+    fundingHistory = fundingHistory.filter(f => {
+      const isSeedId = /^fund-(local|demo)-\d{1,2}$/.test(f.id);
+      const isSeedSource = f.source === "Initial Funding Deposit" || f.source === "Mid-month Topup";
+      return !(isSeedId || isSeedSource);
+    });
+    
+    saveLocalTransactions();
     saveLocalFunding();
   }
   
@@ -486,6 +512,28 @@ function init() {
       currentSelectedMonth = e.target.value;
       updateMonthlyLimitFromCurrency();
       renderAll();
+    });
+  }
+
+  const clearMonthBtn = document.getElementById('clear-month-data-btn');
+  if (clearMonthBtn) {
+    clearMonthBtn.addEventListener('click', () => {
+      const monthLabel = formatMonthLabel(currentSelectedMonth);
+      if (confirm(`Are you sure you want to clean all records for [${monthLabel}]? This will remove all expenses and funding recorded for this month.`)) {
+        if (currentSelectedMonth === 'all') {
+          transactions = [];
+          fundingHistory = [];
+        } else {
+          transactions = transactions.filter(tx => !tx.date || !tx.date.startsWith(currentSelectedMonth));
+          fundingHistory = fundingHistory.filter(f => !f.date || !f.date.startsWith(currentSelectedMonth));
+        }
+        if (isDemoMode) {
+          saveLocalTransactions();
+          saveLocalFunding();
+        }
+        renderAll();
+        alert(`Data for [${monthLabel}] has been cleaned successfully!`);
+      }
     });
   }
 
