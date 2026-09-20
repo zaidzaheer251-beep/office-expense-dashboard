@@ -831,12 +831,7 @@ function setupAuthListeners() {
         );
 
         if (isNetworkErr) {
-          alert(
-            "⚠️ Cloud Database Notice:\n\n" +
-            "The Supabase database project is currently offline or paused.\n\n" +
-            "Logging you in seamlessly using Local Storage Mode as '" + (email || 'Admin') + "'!\n" +
-            "All expenses, calculations, and reports are fully functional and saved on this device."
-          );
+          console.warn("Cloud database is offline/paused. Logging in via Local Storage Mode.");
           loginLocally(email, username);
           return;
         }
