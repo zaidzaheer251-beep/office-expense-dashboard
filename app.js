@@ -166,21 +166,20 @@ function loginLocally(email, username) {
     transactions = transactions.filter(tx => {
       const isSeedId = /^tx-(local|demo)-\d{1,2}$/.test(tx.id);
       const isSeedItem = seedItemNames.has(tx.item);
-      return !(isSeedId || isSeedItem);
+      return !(isSeedId && isSeedItem);
     });
     
     fundingHistory = fundingHistory.filter(f => {
       const isSeedId = /^fund-(local|demo)-\d{1,2}$/.test(f.id);
       const isSeedSource = f.source === "Initial Funding Deposit" || f.source === "Mid-month Topup";
-      return !(isSeedId || isSeedSource);
+      return !(isSeedId && isSeedSource);
     });
 
-    // Add user's real September transactions
-    if (!safeStorage.getItem('september_real_expenses_synced_v1')) {
-      const existingIds = new Set(transactions.map(t => t.id));
-      const itemsToAdd = USER_SEPTEMBER_TRANSACTIONS.filter(t => !existingIds.has(t.id));
+    // Ensure all 17 September transactions are always present
+    const existingIds = new Set(transactions.map(t => t.id));
+    const itemsToAdd = USER_SEPTEMBER_TRANSACTIONS.filter(t => !existingIds.has(t.id));
+    if (itemsToAdd.length > 0) {
       transactions = [...itemsToAdd, ...transactions];
-      safeStorage.setItem('september_real_expenses_synced_v1', 'true');
     }
     
     saveLocalTransactions();
@@ -394,7 +393,7 @@ let paymentRows, addFundingForm;
 let detailedTransactionRows, advCategoryFilter, advSortFilter, advStartDate, advEndDate, resetFiltersBtn, exportCsvBtn, filteredStatsText;
 let chatFeed, chatForm, chatInput;
 let financialInsightsBox, reportMonthSelect, reportPreparedBy, generateMonthlyReportBtn, activeMonthSelect;
-let currentSelectedMonth = new Date().toISOString().substring(0, 7);
+let currentSelectedMonth = safeStorage.getItem('active_selected_month') || '2026-09';
 let calendarCells, calendarMonthYear, calPrevBtn, calNextBtn;
 let authForm, authTitle, authSubtitle, authSubmitBtn, authToggleLink, authToggleText, authUsernameGroup, authUsername, authEmail, authPassword, logoutBtn, userDisplayName, userDisplayRole;
 
@@ -538,30 +537,9 @@ function init() {
   if (activeMonthSelect) {
     activeMonthSelect.addEventListener('change', (e) => {
       currentSelectedMonth = e.target.value;
+      safeStorage.setItem('active_selected_month', currentSelectedMonth);
       updateMonthlyLimitFromCurrency();
       renderAll();
-    });
-  }
-
-  const clearMonthBtn = document.getElementById('clear-month-data-btn');
-  if (clearMonthBtn) {
-    clearMonthBtn.addEventListener('click', () => {
-      const monthLabel = formatMonthLabel(currentSelectedMonth);
-      if (confirm(`Are you sure you want to clean all records for [${monthLabel}]? This will remove all expenses and funding recorded for this month.`)) {
-        if (currentSelectedMonth === 'all') {
-          transactions = [];
-          fundingHistory = [];
-        } else {
-          transactions = transactions.filter(tx => !tx.date || !tx.date.startsWith(currentSelectedMonth));
-          fundingHistory = fundingHistory.filter(f => !f.date || !f.date.startsWith(currentSelectedMonth));
-        }
-        if (isDemoMode) {
-          saveLocalTransactions();
-          saveLocalFunding();
-        }
-        renderAll();
-        alert(`Data for [${monthLabel}] has been cleaned successfully!`);
-      }
     });
   }
 
@@ -1185,6 +1163,7 @@ function subscribeChats() {
 // Calculations
 function getAvailableMonths() {
   const monthSet = new Set();
+  monthSet.add('2026-09');
   const today = new Date();
   const currentMonthStr = today.toISOString().substring(0, 7);
   monthSet.add(currentMonthStr);
@@ -1228,6 +1207,9 @@ function populateActiveMonthDropdown() {
   const el = document.getElementById('active-month-select');
   if (!el) return;
   const months = getAvailableMonths();
+  if (!currentSelectedMonth || (!months.includes(currentSelectedMonth) && currentSelectedMonth !== 'all')) {
+    currentSelectedMonth = '2026-09';
+  }
   const currentVal = currentSelectedMonth;
   
   const existingValues = Array.from(el.options).map(o => o.value);
