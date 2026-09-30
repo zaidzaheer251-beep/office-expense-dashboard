@@ -829,6 +829,31 @@
             </div>
           </div>
 
+          <!-- Full Width: Data Backup, Restore & CCleaner Protection Card -->
+          <div class="card-widget" style="grid-column: 1 / -1;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <h3><i class="fa-solid fa-shield-halved" style="color: var(--primary-color); margin-right: 8px;"></i> Data Backup & Permanent Storage</h3>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+              Agar aap apna laptop CCleaner se clean karte hain to data mehfooz rakhne ke liye backup file download kar lein ya CCleaner me is website ko exclude kar lein.
+            </p>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+              <button id="download-backup-btn" class="btn-submit" style="background: var(--success); display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-download"></i> Download Full Backup (.json)
+              </button>
+              
+              <label for="restore-backup-input" class="btn-submit" style="background: var(--primary-color); display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin: 0;">
+                <i class="fa-solid fa-upload"></i> Restore From Backup File
+              </label>
+              <input type="file" id="restore-backup-input" accept=".json" style="display: none;">
+            </div>
+            
+            <div style="margin-top: 20px; padding: 14px; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 12px; color: var(--text-secondary);">
+              <strong>💡 CCleaner Protection Tip:</strong><br>
+              CCleaner open karein 👉 <strong>Options</strong> 👉 <strong>Cookies</strong> par jayein 👉 <strong>office-expense-dashboard.vercel.app</strong> ko search karke <strong>"Cookies to Keep"</strong> list me add kar lein. Aesa karne se CCleaner is dashboard ke data ko kabhi delete nahi karega!
+            </div>
+          </div>
+
         </section>
       </main>
 

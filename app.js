@@ -2751,6 +2751,73 @@ function setupSettingsListeners() {
       renderAll();
     });
   }
+
+  // Backup & Restore Handlers
+  const downloadBackupBtn = document.getElementById('download-backup-btn');
+  if (downloadBackupBtn) {
+    downloadBackupBtn.addEventListener('click', () => {
+      const backupData = {
+        version: '1.0',
+        timestamp: new Date().toISOString(),
+        user_id: currentUser ? currentUser.id : 'default',
+        currency: currentCurrency,
+        monthlyLimit: monthlyLimit,
+        transactions: transactions,
+        fundingHistory: fundingHistory,
+        debts: debts,
+        userCategories: userCategories
+      };
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().substring(0, 10);
+      a.href = url;
+      a.download = `office_expenses_backup_${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      alert('Backup downloaded successfully! CCleaner chalane ke baad bhi aap is file se sara data restore kar sakte hain.');
+    });
+  }
+
+  const restoreBackupInput = document.getElementById('restore-backup-input');
+  if (restoreBackupInput) {
+    restoreBackupInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (parsed && Array.isArray(parsed.transactions)) {
+            transactions = parsed.transactions;
+            if (Array.isArray(parsed.fundingHistory)) fundingHistory = parsed.fundingHistory;
+            if (Array.isArray(parsed.debts)) debts = parsed.debts;
+            if (Array.isArray(parsed.userCategories)) userCategories = parsed.userCategories;
+            
+            saveLocalTransactions();
+            saveLocalFunding();
+            saveLocalDebts();
+            if (userCategories.length > 0) {
+              safeStorage.setItem(`office_categories_${currentUser.id}`, JSON.stringify(userCategories));
+              loadCategories();
+            }
+            renderAll();
+            alert('Data successfully restored from backup! All expenses, funding, and debts are back.');
+          } else {
+            alert('Invalid backup file format.');
+          }
+        } catch (err) {
+          alert('Failed to read backup file: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      restoreBackupInput.value = '';
+    });
+  }
 }
 
 function renderSettingsCategories() {
