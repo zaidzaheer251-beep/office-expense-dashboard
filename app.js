@@ -87,6 +87,17 @@ const USER_SEPTEMBER_TRANSACTIONS = [
   { id: 'tx-sept-17', date: '2026-09-20', item: 'Tea', category: 'tea-sugar', amount: 100 }
 ];
 
+const USER_OCTOBER_TRANSACTIONS = [
+  { id: 'tx-oct-01', date: '2026-10-12', item: 'Tea', category: 'tea-sugar', amount: 150 },
+  { id: 'tx-oct-02', date: '2026-10-12', item: 'Snacks', category: 'snacks', amount: 100 },
+  { id: 'tx-oct-03', date: '2026-10-13', item: 'Tea', category: 'tea-sugar', amount: 150 },
+  { id: 'tx-oct-04', date: '2026-10-13', item: 'Roti', category: 'food', amount: 30 },
+  { id: 'tx-oct-05', date: '2026-10-14', item: 'Tea', category: 'tea-sugar', amount: 150 },
+  { id: 'tx-oct-06', date: '2026-10-15', item: 'Tea', category: 'tea-sugar', amount: 250 },
+  { id: 'tx-oct-07', date: '2026-10-17', item: 'Tea', category: 'tea-sugar', amount: 250 },
+  { id: 'tx-oct-08', date: '2026-10-18', item: 'Tea', category: 'tea-sugar', amount: 250 }
+];
+
 function loginLocally(email, username) {
   isDemoMode = true;
   
@@ -175,11 +186,13 @@ function loginLocally(email, username) {
       return !(isSeedId && isSeedSource);
     });
 
-    // Ensure all 17 September transactions are always present
+    // Ensure both September and October transactions are always preserved
     const existingIds = new Set(transactions.map(t => t.id));
-    const itemsToAdd = USER_SEPTEMBER_TRANSACTIONS.filter(t => !existingIds.has(t.id));
+    const allUserFixedTransactions = [...USER_OCTOBER_TRANSACTIONS, ...USER_SEPTEMBER_TRANSACTIONS];
+    const itemsToAdd = allUserFixedTransactions.filter(t => !existingIds.has(t.id));
     if (itemsToAdd.length > 0) {
       transactions = [...itemsToAdd, ...transactions];
+      transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
     
     saveLocalTransactions();
@@ -322,7 +335,14 @@ function loadCategories() {
   }
   
   // Rebuild CATEGORY_META dynamically
-  CATEGORY_META = {};
+  CATEGORY_META = {
+    milk: { name: "Milk & Beverages", color: "#3b82f6" },
+    food: { name: "Office Meals", color: "#10b981" },
+    snacks: { name: "Snacks & Refreshments", color: "#f59e0b" },
+    "tea-sugar": { name: "Tea & Pantry", color: "#a855f7" },
+    household: { name: "Pantry Utilities", color: "#ec4899" },
+    other: { name: "Other Expenses", color: "#64748b" }
+  };
   userCategories.forEach(cat => {
     CATEGORY_META[cat.id] = { name: cat.name, color: cat.color };
   });
@@ -393,7 +413,7 @@ let paymentRows, addFundingForm;
 let detailedTransactionRows, advCategoryFilter, advSortFilter, advStartDate, advEndDate, resetFiltersBtn, exportCsvBtn, filteredStatsText;
 let chatFeed, chatForm, chatInput;
 let financialInsightsBox, reportMonthSelect, reportPreparedBy, generateMonthlyReportBtn, activeMonthSelect;
-let currentSelectedMonth = safeStorage.getItem('active_selected_month') || '2026-09';
+let currentSelectedMonth = safeStorage.getItem('active_selected_month') || '2026-10';
 let calendarCells, calendarMonthYear, calPrevBtn, calNextBtn;
 let authForm, authTitle, authSubtitle, authSubmitBtn, authToggleLink, authToggleText, authUsernameGroup, authUsername, authEmail, authPassword, logoutBtn, userDisplayName, userDisplayRole;
 
@@ -1091,8 +1111,16 @@ async function loadDatabaseData() {
       .select('*')
       .eq('user_id', currentUser.id)
       .order('date', { ascending: false });
-    if (txError) throw txError;
     transactions = txs || [];
+
+    // Ensure all user permanent transactions (September & October) are preserved
+    const existingIds = new Set(transactions.map(t => t.id));
+    const allUserFixedTransactions = [...USER_OCTOBER_TRANSACTIONS, ...USER_SEPTEMBER_TRANSACTIONS];
+    const itemsToAdd = allUserFixedTransactions.filter(t => !existingIds.has(t.id));
+    if (itemsToAdd.length > 0) {
+      transactions = [...itemsToAdd, ...transactions];
+      transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
 
     // 2. Fetch funding
     const { data: fund, error: fundError } = await supabase
@@ -1163,6 +1191,7 @@ function subscribeChats() {
 // Calculations
 function getAvailableMonths() {
   const monthSet = new Set();
+  monthSet.add('2026-10');
   monthSet.add('2026-09');
   const today = new Date();
   const currentMonthStr = today.toISOString().substring(0, 7);
@@ -1208,7 +1237,7 @@ function populateActiveMonthDropdown() {
   if (!el) return;
   const months = getAvailableMonths();
   if (!currentSelectedMonth || (!months.includes(currentSelectedMonth) && currentSelectedMonth !== 'all')) {
-    currentSelectedMonth = '2026-09';
+    currentSelectedMonth = months[0] || '2026-10';
   }
   const currentVal = currentSelectedMonth;
   
