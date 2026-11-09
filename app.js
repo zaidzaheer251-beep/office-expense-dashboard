@@ -247,18 +247,18 @@ const USER_SEPTEMBER_TRANSACTIONS = [
 
 const USER_OCTOBER_TRANSACTIONS = [
   {
-    "id": "tx-local-1791044173130",
-    "date": "2026-10-01",
-    "item": "Tea",
-    "category": "other",
-    "amount": 147
-  },
-  {
     "id": "tx-local-1791044217192",
     "date": "2026-10-01",
     "item": "Ice",
     "category": "other",
     "amount": 30
+  },
+  {
+    "id": "tx-local-1791044173130",
+    "date": "2026-10-01",
+    "item": "Tea",
+    "category": "other",
+    "amount": 147
   },
   {
     "id": "tx-local-1791044226864",
@@ -275,11 +275,11 @@ const USER_OCTOBER_TRANSACTIONS = [
     "amount": 120
   },
   {
-    "id": "tx-local-1791199473872",
+    "id": "tx-local-1791205537750",
     "date": "2026-10-05",
-    "item": "Tea",
-    "category": "tea-sugar",
-    "amount": 150
+    "item": "Guset",
+    "category": "other",
+    "amount": 200
   },
   {
     "id": "tx-local-1791199485847",
@@ -289,17 +289,10 @@ const USER_OCTOBER_TRANSACTIONS = [
     "amount": 30
   },
   {
-    "id": "tx-local-1791205537750",
+    "id": "tx-local-1791199473872",
     "date": "2026-10-05",
-    "item": "Guset",
-    "category": "other",
-    "amount": 200
-  },
-  {
-    "id": "tx-local-1791270427869",
-    "date": "2026-10-06",
     "item": "Tea",
-    "category": "other",
+    "category": "tea-sugar",
     "amount": 150
   },
   {
@@ -310,18 +303,11 @@ const USER_OCTOBER_TRANSACTIONS = [
     "amount": 130
   },
   {
-    "id": "tx-local-1791468561963",
-    "date": "2026-10-08",
+    "id": "tx-local-1791270427869",
+    "date": "2026-10-06",
     "item": "Tea",
-    "category": "milk",
+    "category": "other",
     "amount": 150
-  },
-  {
-    "id": "tx-local-1791472889613",
-    "date": "2026-10-08",
-    "item": "food",
-    "category": "snacks",
-    "amount": 360
   },
   {
     "id": "tx-local-1791472903953",
@@ -336,6 +322,20 @@ const USER_OCTOBER_TRANSACTIONS = [
     "item": "Colddring",
     "category": "snacks",
     "amount": 60
+  },
+  {
+    "id": "tx-local-1791468561963",
+    "date": "2026-10-08",
+    "item": "Tea",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1791472889613",
+    "date": "2026-10-08",
+    "item": "food",
+    "category": "snacks",
+    "amount": 360
   },
   {
     "id": "tx-local-1791636518667",
@@ -380,13 +380,6 @@ const USER_OCTOBER_TRANSACTIONS = [
     "amount": 30
   },
   {
-    "id": "tx-oct-01",
-    "date": "2026-10-12",
-    "item": "Tea",
-    "category": "tea-sugar",
-    "amount": 150
-  },
-  {
     "id": "tx-oct-02",
     "date": "2026-10-12",
     "item": "Snacks",
@@ -394,11 +387,18 @@ const USER_OCTOBER_TRANSACTIONS = [
     "amount": 100
   },
   {
-    "id": "tx-oct-03",
-    "date": "2026-10-13",
+    "id": "tx-oct-01",
+    "date": "2026-10-12",
     "item": "Tea",
     "category": "tea-sugar",
     "amount": 150
+  },
+  {
+    "id": "tx-local-1791819389687",
+    "date": "2026-10-12",
+    "item": "snaks",
+    "category": "snacks",
+    "amount": 100
   },
   {
     "id": "tx-oct-04",
@@ -408,11 +408,25 @@ const USER_OCTOBER_TRANSACTIONS = [
     "amount": 30
   },
   {
+    "id": "tx-oct-03",
+    "date": "2026-10-13",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 150
+  },
+  {
     "id": "tx-oct-05",
     "date": "2026-10-14",
     "item": "Tea",
     "category": "tea-sugar",
     "amount": 150
+  },
+  {
+    "id": "tx-local-1792942767346",
+    "date": "2026-10-14",
+    "item": "snaks",
+    "category": "snacks",
+    "amount": 110
   },
   {
     "id": "tx-oct-06",
@@ -434,6 +448,188 @@ const USER_OCTOBER_TRANSACTIONS = [
     "item": "Tea",
     "category": "tea-sugar",
     "amount": 250
+  },
+  {
+    "id": "tx-local-1792418944935",
+    "date": "2026-10-19",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 100
+  },
+  {
+    "id": "tx-local-1792418953822",
+    "date": "2026-10-19",
+    "item": "snaks",
+    "category": "snacks",
+    "amount": 140
+  },
+  {
+    "id": "tx-local-1792757902797",
+    "date": "2026-10-20",
+    "item": "Milk",
+    "category": "snacks",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1792942724729",
+    "date": "2026-10-20",
+    "item": "snaks",
+    "category": "snacks",
+    "amount": 140
+  },
+  {
+    "id": "tx-local-1792757922073",
+    "date": "2026-10-21",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 100
+  },
+  {
+    "id": "tx-local-1792757931745",
+    "date": "2026-10-22",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 120
+  },
+  {
+    "id": "tx-local-1792942650305",
+    "date": "2026-10-23",
+    "item": "Milk",
+    "category": "other",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1792757940786",
+    "date": "2026-10-23",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1792838987902",
+    "date": "2026-10-24",
+    "item": "Corn",
+    "category": "other",
+    "amount": 100
+  },
+  {
+    "id": "tx-local-1792942667621",
+    "date": "2026-10-24",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 120
+  },
+  {
+    "id": "tx-local-1792942676950",
+    "date": "2026-10-24",
+    "item": "snaks",
+    "category": "snacks",
+    "amount": 100
+  },
+  {
+    "id": "tx-local-1793032831544",
+    "date": "2026-10-26",
+    "item": "Chips",
+    "category": "snacks",
+    "amount": 200
+  },
+  {
+    "id": "tx-local-1793356865227",
+    "date": "2026-10-26",
+    "item": "Milk",
+    "category": "snacks",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1793017820779",
+    "date": "2026-10-26",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1793017792338",
+    "date": "2026-10-26",
+    "item": "gas",
+    "category": "snacks",
+    "amount": 1000
+  },
+  {
+    "id": "tx-local-1793017807354",
+    "date": "2026-10-26",
+    "item": "snaks",
+    "category": "snacks",
+    "amount": 100
+  },
+  {
+    "id": "tx-local-1793369764066",
+    "date": "2026-10-27",
+    "item": "Milk&Mashbox",
+    "category": "milk",
+    "amount": 160
+  },
+  {
+    "id": "tx-local-1793369789125",
+    "date": "2026-10-28",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1793369799390",
+    "date": "2026-10-28",
+    "item": "samoosa",
+    "category": "food",
+    "amount": 120
+  },
+  {
+    "id": "tx-local-1793369825166",
+    "date": "2026-10-29",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1793369510432",
+    "date": "2026-10-30",
+    "item": "Burgur",
+    "category": "other",
+    "amount": 200
+  },
+  {
+    "id": "tx-local-1793369883247",
+    "date": "2026-10-30",
+    "item": "Dishbar&Biscuite",
+    "category": "food",
+    "amount": 70
+  },
+  {
+    "id": "tx-local-1793369847914",
+    "date": "2026-10-30",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 120
+  },
+  {
+    "id": "tx-local-1793369528342",
+    "date": "2026-10-30",
+    "item": "Penats",
+    "category": "other",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1793356893230",
+    "date": "2026-10-30",
+    "item": "food",
+    "category": "snacks",
+    "amount": 140
+  },
+  {
+    "id": "tx-local-1793369536596",
+    "date": "2026-10-30",
+    "item": "snaks",
+    "category": "other",
+    "amount": 40
   }
 ];
 
@@ -460,6 +656,30 @@ const USER_FUNDING_HISTORY = [
     "id": "fund-local-1791468586504",
     "source": "Arslan bhai",
     "date": "2026-10-06",
+    "amount": 1000
+  },
+  {
+    "id": "fund-local-1792418847232",
+    "source": "Arslan bhai",
+    "date": "2026-10-13",
+    "amount": 2000
+  },
+  {
+    "id": "fund-local-1792418859842",
+    "source": "Arslan bhai",
+    "date": "2026-10-19",
+    "amount": 2000
+  },
+  {
+    "id": "fund-local-1793015010442",
+    "source": "Arslan bhai",
+    "date": "2026-10-26",
+    "amount": 2000
+  },
+  {
+    "id": "fund-local-1793369482006",
+    "source": "Arslan bhai",
+    "date": "2026-10-30",
     "amount": 1000
   }
 ];
