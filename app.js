@@ -68,35 +68,402 @@ function saveLocalDebts() {
 }
 
 const USER_SEPTEMBER_TRANSACTIONS = [
-  { id: 'tx-sept-01', date: '2026-09-09', item: 'Milk', category: 'milk', amount: 200 },
-  { id: 'tx-sept-02', date: '2026-09-10', item: 'Burger', category: 'food', amount: 440 },
-  { id: 'tx-sept-03', date: '2026-09-10', item: 'Milk', category: 'milk', amount: 150 },
-  { id: 'tx-sept-04', date: '2026-09-11', item: 'Tea', category: 'tea-sugar', amount: 100 },
-  { id: 'tx-sept-05', date: '2026-09-12', item: 'Snacks', category: 'snacks', amount: 160 },
-  { id: 'tx-sept-06', date: '2026-09-12', item: 'Milk', category: 'milk', amount: 100 },
-  { id: 'tx-sept-07', date: '2026-09-12', item: 'Corn', category: 'snacks', amount: 100 },
-  { id: 'tx-sept-08', date: '2026-09-13', item: 'Tea', category: 'tea-sugar', amount: 150 },
-  { id: 'tx-sept-09', date: '2026-09-13', item: 'Fries', category: 'snacks', amount: 200 },
-  { id: 'tx-sept-10', date: '2026-09-14', item: 'Milk', category: 'milk', amount: 150 },
-  { id: 'tx-sept-11', date: '2026-09-15', item: 'Gool Gupy', category: 'snacks', amount: 100 },
-  { id: 'tx-sept-12', date: '2026-09-15', item: 'Snacks', category: 'snacks', amount: 100 },
-  { id: 'tx-sept-13', date: '2026-09-16', item: 'Milk', category: 'milk', amount: 170 },
-  { id: 'tx-sept-14', date: '2026-09-17', item: 'Milk', category: 'milk', amount: 150 },
-  { id: 'tx-sept-15', date: '2026-09-18', item: 'Tea', category: 'tea-sugar', amount: 150 },
-  { id: 'tx-sept-16', date: '2026-09-19', item: 'Tea', category: 'tea-sugar', amount: 150 },
-  { id: 'tx-sept-17', date: '2026-09-20', item: 'Tea', category: 'tea-sugar', amount: 100 }
+  {
+    "id": "tx-sept-01",
+    "date": "2026-09-09",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 200
+  },
+  {
+    "id": "tx-sept-02",
+    "date": "2026-09-10",
+    "item": "Burger",
+    "category": "food",
+    "amount": 440
+  },
+  {
+    "id": "tx-sept-03",
+    "date": "2026-09-10",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-sept-04",
+    "date": "2026-09-11",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 100
+  },
+  {
+    "id": "tx-sept-05",
+    "date": "2026-09-12",
+    "item": "Snacks",
+    "category": "snacks",
+    "amount": 160
+  },
+  {
+    "id": "tx-sept-06",
+    "date": "2026-09-12",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 100
+  },
+  {
+    "id": "tx-sept-07",
+    "date": "2026-09-12",
+    "item": "Corn",
+    "category": "snacks",
+    "amount": 100
+  },
+  {
+    "id": "tx-sept-08",
+    "date": "2026-09-13",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 150
+  },
+  {
+    "id": "tx-sept-09",
+    "date": "2026-09-13",
+    "item": "Fries",
+    "category": "snacks",
+    "amount": 200
+  },
+  {
+    "id": "tx-sept-10",
+    "date": "2026-09-14",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-sept-11",
+    "date": "2026-09-15",
+    "item": "Gool Gupy",
+    "category": "snacks",
+    "amount": 100
+  },
+  {
+    "id": "tx-sept-12",
+    "date": "2026-09-15",
+    "item": "Snacks",
+    "category": "snacks",
+    "amount": 100
+  },
+  {
+    "id": "tx-sept-13",
+    "date": "2026-09-16",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 170
+  },
+  {
+    "id": "tx-sept-14",
+    "date": "2026-09-17",
+    "item": "Milk",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-sept-15",
+    "date": "2026-09-18",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 150
+  },
+  {
+    "id": "tx-sept-16",
+    "date": "2026-09-19",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 150
+  },
+  {
+    "id": "tx-sept-17",
+    "date": "2026-09-20",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 100
+  },
+  {
+    "id": "tx-local-1790761847209",
+    "date": "2026-09-21",
+    "item": "Tea",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1790761871246",
+    "date": "2026-09-22",
+    "item": "Tea",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1790761907759",
+    "date": "2026-09-25",
+    "item": "snaks",
+    "category": "milk",
+    "amount": 200
+  },
+  {
+    "id": "tx-local-1790761978736",
+    "date": "2026-09-29",
+    "item": "Tea",
+    "category": "milk",
+    "amount": 270
+  },
+  {
+    "id": "tx-local-1790760827109",
+    "date": "2026-09-30",
+    "item": "Tea",
+    "category": "milk",
+    "amount": 170
+  },
+  {
+    "id": "tx-local-1790761995949",
+    "date": "2026-09-30",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 170
+  },
+  {
+    "id": "tx-local-1790847028854",
+    "date": "2026-09-30",
+    "item": "sonf",
+    "category": "tea-sugar",
+    "amount": 50
+  },
+  {
+    "id": "tx-local-1790847052460",
+    "date": "2026-09-30",
+    "item": "Ice",
+    "category": "other",
+    "amount": 30
+  }
 ];
 
 const USER_OCTOBER_TRANSACTIONS = [
-  { id: 'tx-oct-01', date: '2026-10-12', item: 'Tea', category: 'tea-sugar', amount: 150 },
-  { id: 'tx-oct-02', date: '2026-10-12', item: 'Snacks', category: 'snacks', amount: 100 },
-  { id: 'tx-oct-03', date: '2026-10-13', item: 'Tea', category: 'tea-sugar', amount: 150 },
-  { id: 'tx-oct-04', date: '2026-10-13', item: 'Roti', category: 'food', amount: 30 },
-  { id: 'tx-oct-05', date: '2026-10-14', item: 'Tea', category: 'tea-sugar', amount: 150 },
-  { id: 'tx-oct-06', date: '2026-10-15', item: 'Tea', category: 'tea-sugar', amount: 250 },
-  { id: 'tx-oct-07', date: '2026-10-17', item: 'Tea', category: 'tea-sugar', amount: 250 },
-  { id: 'tx-oct-08', date: '2026-10-18', item: 'Tea', category: 'tea-sugar', amount: 250 }
+  {
+    "id": "tx-local-1791044173130",
+    "date": "2026-10-01",
+    "item": "Tea",
+    "category": "other",
+    "amount": 147
+  },
+  {
+    "id": "tx-local-1791044217192",
+    "date": "2026-10-01",
+    "item": "Ice",
+    "category": "other",
+    "amount": 30
+  },
+  {
+    "id": "tx-local-1791044226864",
+    "date": "2026-10-03",
+    "item": "Tea",
+    "category": "other",
+    "amount": 120
+  },
+  {
+    "id": "tx-local-1791117574698",
+    "date": "2026-10-04",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 120
+  },
+  {
+    "id": "tx-local-1791199473872",
+    "date": "2026-10-05",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1791199485847",
+    "date": "2026-10-05",
+    "item": "Ice",
+    "category": "other",
+    "amount": 30
+  },
+  {
+    "id": "tx-local-1791205537750",
+    "date": "2026-10-05",
+    "item": "Guset",
+    "category": "other",
+    "amount": 200
+  },
+  {
+    "id": "tx-local-1791270427869",
+    "date": "2026-10-06",
+    "item": "Tea",
+    "category": "other",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1791468545758",
+    "date": "2026-10-06",
+    "item": "Guest",
+    "category": "snacks",
+    "amount": 130
+  },
+  {
+    "id": "tx-local-1791468561963",
+    "date": "2026-10-08",
+    "item": "Tea",
+    "category": "milk",
+    "amount": 150
+  },
+  {
+    "id": "tx-local-1791472889613",
+    "date": "2026-10-08",
+    "item": "food",
+    "category": "snacks",
+    "amount": 360
+  },
+  {
+    "id": "tx-local-1791472903953",
+    "date": "2026-10-08",
+    "item": "Biscutes",
+    "category": "snacks",
+    "amount": 200
+  },
+  {
+    "id": "tx-local-1791472921483",
+    "date": "2026-10-08",
+    "item": "Colddring",
+    "category": "snacks",
+    "amount": 60
+  },
+  {
+    "id": "tx-local-1791636518667",
+    "date": "2026-10-09",
+    "item": "snaks",
+    "category": "snacks",
+    "amount": 140
+  },
+  {
+    "id": "tx-local-1791631765500",
+    "date": "2026-10-10",
+    "item": "Tea",
+    "category": "snacks",
+    "amount": 300
+  },
+  {
+    "id": "tx-local-1791729754368",
+    "date": "2026-10-11",
+    "item": "Burgur",
+    "category": "snacks",
+    "amount": 400
+  },
+  {
+    "id": "tx-local-1791729767436",
+    "date": "2026-10-11",
+    "item": "Chips",
+    "category": "snacks",
+    "amount": 100
+  },
+  {
+    "id": "tx-local-1791729787304",
+    "date": "2026-10-11",
+    "item": "Colddrink",
+    "category": "food",
+    "amount": 120
+  },
+  {
+    "id": "tx-local-1791802390116",
+    "date": "2026-10-12",
+    "item": "Ice",
+    "category": "other",
+    "amount": 30
+  },
+  {
+    "id": "tx-oct-01",
+    "date": "2026-10-12",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 150
+  },
+  {
+    "id": "tx-oct-02",
+    "date": "2026-10-12",
+    "item": "Snacks",
+    "category": "snacks",
+    "amount": 100
+  },
+  {
+    "id": "tx-oct-03",
+    "date": "2026-10-13",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 150
+  },
+  {
+    "id": "tx-oct-04",
+    "date": "2026-10-13",
+    "item": "Roti",
+    "category": "food",
+    "amount": 30
+  },
+  {
+    "id": "tx-oct-05",
+    "date": "2026-10-14",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 150
+  },
+  {
+    "id": "tx-oct-06",
+    "date": "2026-10-15",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 250
+  },
+  {
+    "id": "tx-oct-07",
+    "date": "2026-10-17",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 250
+  },
+  {
+    "id": "tx-oct-08",
+    "date": "2026-10-18",
+    "item": "Tea",
+    "category": "tea-sugar",
+    "amount": 250
+  }
 ];
+
+const USER_FUNDING_HISTORY = [
+  {
+    "id": "fund-local-1790761821451",
+    "source": "Arslan bhai",
+    "date": "2026-09-09",
+    "amount": 2000
+  },
+  {
+    "id": "fund-local-1790761931447",
+    "source": "Arslan bhai",
+    "date": "2026-09-27",
+    "amount": 1340
+  },
+  {
+    "id": "fund-local-1791044240813",
+    "source": "Arslan bhai",
+    "date": "2026-10-01",
+    "amount": 1000
+  },
+  {
+    "id": "fund-local-1791468586504",
+    "source": "Arslan bhai",
+    "date": "2026-10-06",
+    "amount": 1000
+  }
+];
+
 
 function loginLocally(email, username) {
   isDemoMode = true;
@@ -196,6 +563,13 @@ function loginLocally(email, username) {
     }
     
     saveLocalTransactions();
+    // Ensure all user funding records are always preserved
+    const existingFundIds = new Set(fundingHistory.map(f => f.id));
+    const fundsToAdd = USER_FUNDING_HISTORY.filter(f => !existingFundIds.has(f.id));
+    if (fundsToAdd.length > 0) {
+      fundingHistory = [...fundsToAdd, ...fundingHistory];
+      fundingHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
     saveLocalFunding();
   }
   
@@ -1130,6 +1504,12 @@ async function loadDatabaseData() {
       .order('date', { ascending: false });
     if (fundError) throw fundError;
     fundingHistory = fund || [];
+    const existingFundIdsDb = new Set(fundingHistory.map(f => f.id));
+    const fundsToAddDb = USER_FUNDING_HISTORY.filter(f => !existingFundIdsDb.has(f.id));
+    if (fundsToAddDb.length > 0) {
+      fundingHistory = [...fundsToAddDb, ...fundingHistory];
+      fundingHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
 
     // 2.5. Fetch debts (Lend/Borrow Udhaar ledger)
     try {
@@ -1972,6 +2352,23 @@ async function downloadPDFReport() {
       else catSums['other'] += parseFloat(tx.amount);
     });
     
+        // Funding table
+    let fundingRowsHtml = '';
+    const sortedFunding = [...monthFunding].sort((a,b) => new Date(b.date) - new Date(a.date));
+    sortedFunding.forEach(f => {
+      const d = new Date(f.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+      fundingRowsHtml += `
+        <tr>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-size: 11px; color: #64748b;">${d}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #0f172a;">${f.source}</td>
+          <td style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; text-align: right; font-weight: 700; color: #10b981;">${formatPKR(f.amount)}</td>
+        </tr>
+      `;
+    });
+    if (fundingRowsHtml === '') {
+      fundingRowsHtml = `<tr><td colspan="3" style="padding: 12px; text-align: center; color: #64748b;">No funding deposits recorded for ${monthTitle}.</td></tr>`;
+    }
+
     let catRowsHtml = '';
     Object.keys(catSums).forEach(k => {
       if (catSums[k] > 0) {
@@ -2224,6 +2621,23 @@ async function downloadMonthlyPDFReport() {
           <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Closing Balance</span>
           <div style="font-size: 18px; font-weight: 800; color: ${balance < 0 ? '#ef4444' : '#10b981'}; margin-top: 4px;">${formatPKR(balance)}</div>
         </div>
+      </div>
+
+            <!-- Received Funding Ledger -->
+      <div style="margin-bottom: 30px;">
+        <h3 style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 10px; border-left: 4px solid #10b981; padding-left: 8px;">Received Funding / Cash Deposits (وصول شدہ رقم)</h3>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+          <thead>
+            <tr style="background-color: #f0fdf4; color: #166534;">
+              <th style="padding: 8px 10px; border-bottom: 2px solid #bbf7d0; font-weight: 700;">Deposit Date</th>
+              <th style="padding: 8px 10px; border-bottom: 2px solid #bbf7d0; font-weight: 700;">Source / Received From</th>
+              <th style="padding: 8px 10px; border-bottom: 2px solid #bbf7d0; font-weight: 700; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${fundingRowsHtml}
+          </tbody>
+        </table>
       </div>
 
       <!-- Category Breakdown -->
